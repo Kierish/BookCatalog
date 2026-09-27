@@ -27,7 +27,8 @@ namespace BookCatalog.Features.Books.CreateBook
             await _store.AddAsync(book);
 
             _logger.LogInformation(
-                "Book created successfully. Id: {BookId}, Title: {Title}, Isbn: {Isbn}", book.Id, book.Title, book.Isbn);
+                "Book created successfully. Id: {BookId}, Title: {Title}, Author: {Author}, Isbn: {Isbn}, PublicationYear: {PublicationYear}"
+                , book.Id, book.Title, book.Author, book.Isbn, book.PublicationYear);
 
             return new BookResponse(book.Id, book.Title, book.Author, book.Isbn, book.PublicationYear);
         }

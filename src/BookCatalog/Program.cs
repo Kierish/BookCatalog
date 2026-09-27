@@ -1,4 +1,6 @@
 using BookCatalog.Features.Books.CreateBook;
+using BookCatalog.Features.Books.GetBookById;
+using BookCatalog.Features.Books.GetBooksList;
 using BookCatalog.Infrastructure.Filters;
 using BookCatalog.Infrastructure.Storage;
 using FluentValidation;
@@ -17,6 +19,8 @@ builder.Services.AddProblemDetails();
 
 // Dependency Injection
 builder.Services.AddSingleton<InMemoryBookStore>();
+builder.Services.AddScoped<GetBookByIdHandler>();
+builder.Services.AddScoped<GetBooksListHandler>();
 builder.Services.AddScoped<CreateBookHandler>();
 
 var app = builder.Build();
