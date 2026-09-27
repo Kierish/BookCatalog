@@ -3,10 +3,9 @@ using System.Collections.Concurrent;
 
 namespace BookCatalog.Infrastructure.Storage
 {
-    public class InMemoryBookStore
+    public sealed class InMemoryBookStore
     {
         private readonly ConcurrentDictionary<Guid, Book> _books = new();
-
 
         public Task<Book?> GetByIdAsync(Guid id)
         {
@@ -18,6 +17,7 @@ namespace BookCatalog.Infrastructure.Storage
         {
             return Task.FromResult<IReadOnlyList<Book>>(_books.Values.ToList());
         }
+
         public Task<bool> AddAsync(Book book)
         {
             var added = _books.TryAdd(book.Id, book);

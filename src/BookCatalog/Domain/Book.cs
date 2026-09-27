@@ -1,6 +1,6 @@
 ﻿namespace BookCatalog.Domain
 {
-    public class Book
+    public sealed class Book
     {
         public Guid Id { get; init; } = Guid.CreateVersion7();
         public required string Title { get; set; }
