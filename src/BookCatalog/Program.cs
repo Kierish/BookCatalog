@@ -1,6 +1,8 @@
 using BookCatalog.Features.Books.CreateBook;
+using BookCatalog.Features.Books.DeleteBook;
 using BookCatalog.Features.Books.GetBookById;
 using BookCatalog.Features.Books.GetBooksList;
+using BookCatalog.Features.Books.UpdateBook;
 using BookCatalog.Infrastructure.Filters;
 using BookCatalog.Infrastructure.Storage;
 using FluentValidation;
@@ -22,6 +24,8 @@ builder.Services.AddSingleton<InMemoryBookStore>();
 builder.Services.AddScoped<GetBookByIdHandler>();
 builder.Services.AddScoped<GetBooksListHandler>();
 builder.Services.AddScoped<CreateBookHandler>();
+builder.Services.AddScoped<UpdateBookHandler>();
+builder.Services.AddScoped<DeleteBookHandler>();
 
 var app = builder.Build();
 

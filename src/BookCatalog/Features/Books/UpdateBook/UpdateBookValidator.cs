@@ -1,10 +1,11 @@
-﻿using FluentValidation;
+﻿using BookCatalog.Features.Books.CreateBook;
+using FluentValidation;
 
-namespace BookCatalog.Features.Books.CreateBook
+namespace BookCatalog.Features.Books.UpdateBook
 {
-    public sealed class CreateBookValidator : AbstractValidator<CreateBookRequest>
+    public sealed class UpdateBookValidator : AbstractValidator<UpdateBookRequest>
     {
-        public CreateBookValidator()
+        public UpdateBookValidator()
         {
             RuleFor(x => x.Title)
                 .NotEmpty()
