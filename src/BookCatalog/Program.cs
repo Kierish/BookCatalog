@@ -6,6 +6,7 @@ using BookCatalog.Features.Books.UpdateBook;
 using BookCatalog.Infrastructure.Filters;
 using BookCatalog.Infrastructure.Storage;
 using FluentValidation;
+using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +18,7 @@ builder.Services.AddControllers(options =>
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 builder.Services.AddSwaggerGen();
+builder.Services.AddFluentValidationRulesToSwagger();
 builder.Services.AddProblemDetails();
 
 // Dependency Injection

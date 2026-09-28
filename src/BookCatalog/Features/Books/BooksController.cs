@@ -12,7 +12,9 @@ namespace BookCatalog.Features.Books
     public sealed class BooksController : ControllerBase
     {
         [HttpGet("{id:guid}")]
-        public async Task<IActionResult> GetById(
+        [ProducesResponseType(typeof(BookResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<BookResponse>> GetById(
             Guid id,
             [FromServices] GetBookByIdHandler handler)
         {
@@ -21,7 +23,8 @@ namespace BookCatalog.Features.Books
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll(
+        [ProducesResponseType(typeof(IReadOnlyList<BookResponse>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<IReadOnlyList<BookResponse>>> GetAll(
             [FromServices] GetBooksListHandler handler)
         {
             var books = await handler.HandleAsync();
@@ -29,7 +32,9 @@ namespace BookCatalog.Features.Books
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(
+        [ProducesResponseType(typeof(BookResponse), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(HttpValidationProblemDetails), StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<BookResponse>> Create(
             [FromBody] CreateBookRequest request,
             [FromServices] CreateBookHandler handler)
         {
@@ -39,6 +44,9 @@ namespace BookCatalog.Features.Books
         }
 
         [HttpPut("{id:guid}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(HttpValidationProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Update(
             Guid id,
             [FromBody] UpdateBookRequest request,
@@ -49,6 +57,8 @@ namespace BookCatalog.Features.Books
         }
 
         [HttpDelete("{id:guid}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Delete(
             Guid id,
             [FromServices] DeleteBookHandler handler)
