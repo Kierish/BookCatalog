@@ -1,9 +1,9 @@
+using BookCatalog.Api.Filters;
 using BookCatalog.Features.Books.CreateBook;
 using BookCatalog.Features.Books.DeleteBook;
 using BookCatalog.Features.Books.GetBookById;
 using BookCatalog.Features.Books.GetBooksList;
 using BookCatalog.Features.Books.UpdateBook;
-using BookCatalog.Infrastructure.Filters;
 using BookCatalog.Infrastructure.Storage;
 using FluentValidation;
 using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
