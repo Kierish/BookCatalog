@@ -1,4 +1,4 @@
-﻿namespace BookCatalog.Features.Books.UpdateBook
+﻿namespace BookCatalog.Api.Features.Books.UpdateBook
 {
     public sealed record UpdateBookRequest(
         string Title,

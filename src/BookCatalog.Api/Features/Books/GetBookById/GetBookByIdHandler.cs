@@ -1,16 +1,15 @@
 ﻿using BookCatalog.Domain.Interfaces;
-using BookCatalog.Infrastructure.Storage;
 
-namespace BookCatalog.Features.Books.GetBookById
+namespace BookCatalog.Api.Features.Books.GetBookById
 {
     public sealed class GetBookByIdHandler
     {
         private readonly IBookRepository _bookRepository;
         private readonly ILogger<GetBookByIdHandler> _logger;
 
-        public GetBookByIdHandler(IBookRepository store, ILogger<GetBookByIdHandler> logger)
+        public GetBookByIdHandler(IBookRepository bookRepository, ILogger<GetBookByIdHandler> logger)
         {
-            _bookRepository = store;
+            _bookRepository = bookRepository;
             _logger = logger;
         }
 

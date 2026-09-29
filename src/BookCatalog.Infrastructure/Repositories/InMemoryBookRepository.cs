@@ -1,8 +1,8 @@
-﻿using BookCatalog.Domain;
+﻿using BookCatalog.Domain.Entities;
 using BookCatalog.Domain.Interfaces;
 using System.Collections.Concurrent;
 
-namespace BookCatalog.Infrastructure.Storage
+namespace BookCatalog.Infrastructure.Repositories
 {
     public sealed class InMemoryBookRepository : IBookRepository
     {

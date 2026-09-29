@@ -1,6 +1,6 @@
 ﻿using FluentValidation;
 
-namespace BookCatalog.Features.Books.CreateBook
+namespace BookCatalog.Api.Features.Books.CreateBook
 {
     public sealed class CreateBookValidator : AbstractValidator<CreateBookRequest>
     {

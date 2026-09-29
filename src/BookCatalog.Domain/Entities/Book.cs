@@ -1,4 +1,4 @@
-﻿namespace BookCatalog.Domain
+﻿namespace BookCatalog.Domain.Entities
 {
     public sealed class Book
     {

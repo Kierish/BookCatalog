@@ -1,17 +1,16 @@
-﻿using BookCatalog.Domain;
+﻿using BookCatalog.Domain.Entities;
 using BookCatalog.Domain.Interfaces;
-using BookCatalog.Infrastructure.Storage;
 
-namespace BookCatalog.Features.Books.UpdateBook
+namespace BookCatalog.Api.Features.Books.UpdateBook
 {
     public sealed class UpdateBookHandler
     {
         private readonly IBookRepository _bookRepository;
         private readonly ILogger<UpdateBookHandler> _logger;
 
-        public UpdateBookHandler(IBookRepository store, ILogger<UpdateBookHandler> logger)
+        public UpdateBookHandler(IBookRepository bookRepository, ILogger<UpdateBookHandler> logger)
         {
-            _bookRepository = store;
+            _bookRepository = bookRepository;
             _logger = logger;
         }
 

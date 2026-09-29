@@ -1,17 +1,16 @@
-﻿using BookCatalog.Domain;
+﻿using BookCatalog.Domain.Entities;
 using BookCatalog.Domain.Interfaces;
-using BookCatalog.Infrastructure.Storage;
 
-namespace BookCatalog.Features.Books.CreateBook
+namespace BookCatalog.Api.Features.Books.CreateBook
 {
     public sealed class CreateBookHandler
     {
         private readonly IBookRepository _bookRepository;
         private readonly ILogger<CreateBookHandler> _logger;
 
-        public CreateBookHandler(IBookRepository store, ILogger<CreateBookHandler> logger)
+        public CreateBookHandler(IBookRepository bookRepository, ILogger<CreateBookHandler> logger)
         {
-            _bookRepository = store;
+            _bookRepository = bookRepository;
             _logger = logger;
         }
 

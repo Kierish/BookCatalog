@@ -1,4 +1,4 @@
-﻿namespace BookCatalog.Features.Books
+﻿namespace BookCatalog.Api.Features.Books
 {
     public sealed record BookResponse(
         Guid Id,

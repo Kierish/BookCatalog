@@ -1,15 +1,14 @@
 ﻿using BookCatalog.Domain.Interfaces;
-using BookCatalog.Infrastructure.Storage;
 
-namespace BookCatalog.Features.Books.GetBooksList
+namespace BookCatalog.Api.Features.Books.GetBooksList
 {
     public sealed class GetBooksListHandler
     {
         private readonly IBookRepository _bookRepository;
 
-        public GetBooksListHandler(IBookRepository store)
+        public GetBooksListHandler(IBookRepository bookRepository)
         {
-            _bookRepository = store;
+            _bookRepository = bookRepository;
         }
 
         public async Task<IReadOnlyList<BookResponse>> HandleAsync()

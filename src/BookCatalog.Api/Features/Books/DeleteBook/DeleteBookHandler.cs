@@ -1,16 +1,15 @@
 ﻿using BookCatalog.Domain.Interfaces;
-using BookCatalog.Infrastructure.Storage;
 
-namespace BookCatalog.Features.Books.DeleteBook
+namespace BookCatalog.Api.Features.Books.DeleteBook
 {
     public sealed class DeleteBookHandler
     {
         private readonly IBookRepository _bookRepository;
         private readonly ILogger<DeleteBookHandler> _logger;
 
-        public DeleteBookHandler(IBookRepository store, ILogger<DeleteBookHandler> logger)
+        public DeleteBookHandler(IBookRepository bookRepository, ILogger<DeleteBookHandler> logger)
         {
-            _bookRepository = store;
+            _bookRepository = bookRepository;
             _logger = logger;
         }
 

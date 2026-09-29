@@ -1,4 +1,4 @@
-﻿namespace BookCatalog.Features.Books.CreateBook
+﻿namespace BookCatalog.Api.Features.Books.CreateBook
 {
     public sealed record CreateBookRequest(
         string Title,
