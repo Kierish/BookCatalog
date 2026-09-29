@@ -1,19 +1,20 @@
-﻿using BookCatalog.Infrastructure.Storage;
+﻿using BookCatalog.Domain.Interfaces;
+using BookCatalog.Infrastructure.Storage;
 
 namespace BookCatalog.Features.Books.GetBooksList
 {
     public sealed class GetBooksListHandler
     {
-        private readonly InMemoryBookStore _store;
+        private readonly IBookRepository _bookRepository;
 
-        public GetBooksListHandler(InMemoryBookStore store)
+        public GetBooksListHandler(IBookRepository store)
         {
-            _store = store;
+            _bookRepository = store;
         }
 
         public async Task<IReadOnlyList<BookResponse>> HandleAsync()
         {
-            var books = await _store.GetAllAsync();
+            var books = await _bookRepository.GetAllAsync();
 
             return books
                 .Select(b => new BookResponse(b.Id, b.Title, b.Author, b.Isbn, b.PublicationYear))

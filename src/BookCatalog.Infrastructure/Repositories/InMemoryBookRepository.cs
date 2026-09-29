@@ -1,9 +1,10 @@
 ﻿using BookCatalog.Domain;
+using BookCatalog.Domain.Interfaces;
 using System.Collections.Concurrent;
 
 namespace BookCatalog.Infrastructure.Storage
 {
-    public sealed class InMemoryBookStore
+    public sealed class InMemoryBookRepository : IBookRepository
     {
         private readonly ConcurrentDictionary<Guid, Book> _books = new();
 

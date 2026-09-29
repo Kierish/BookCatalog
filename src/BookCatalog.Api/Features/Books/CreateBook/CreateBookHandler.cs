@@ -1,16 +1,17 @@
 ﻿using BookCatalog.Domain;
+using BookCatalog.Domain.Interfaces;
 using BookCatalog.Infrastructure.Storage;
 
 namespace BookCatalog.Features.Books.CreateBook
 {
     public sealed class CreateBookHandler
     {
-        private readonly InMemoryBookStore _store;
+        private readonly IBookRepository _bookRepository;
         private readonly ILogger<CreateBookHandler> _logger;
 
-        public CreateBookHandler(InMemoryBookStore store, ILogger<CreateBookHandler> logger)
+        public CreateBookHandler(IBookRepository store, ILogger<CreateBookHandler> logger)
         {
-            _store = store;
+            _bookRepository = store;
             _logger = logger;
         }
 
@@ -24,7 +25,7 @@ namespace BookCatalog.Features.Books.CreateBook
                 PublicationYear = request.PublicationYear
             };
 
-            await _store.AddAsync(book);
+            await _bookRepository.AddAsync(book);
 
             _logger.LogInformation(
                 "Book created successfully. Id: {BookId}, Title: {Title}, Author: {Author}, Isbn: {Isbn}, PublicationYear: {PublicationYear}"

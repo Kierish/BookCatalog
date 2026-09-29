@@ -1,21 +1,22 @@
-﻿using BookCatalog.Infrastructure.Storage;
+﻿using BookCatalog.Domain.Interfaces;
+using BookCatalog.Infrastructure.Storage;
 
 namespace BookCatalog.Features.Books.GetBookById
 {
     public sealed class GetBookByIdHandler
     {
-        private readonly InMemoryBookStore _store;
+        private readonly IBookRepository _bookRepository;
         private readonly ILogger<GetBookByIdHandler> _logger;
 
-        public GetBookByIdHandler(InMemoryBookStore store, ILogger<GetBookByIdHandler> logger)
+        public GetBookByIdHandler(IBookRepository store, ILogger<GetBookByIdHandler> logger)
         {
-            _store = store;
+            _bookRepository = store;
             _logger = logger;
         }
 
         public async Task<BookResponse?> HandleAsync(Guid id)
         {
-            var book = await _store.GetByIdAsync(id);
+            var book = await _bookRepository.GetByIdAsync(id);
 
             if (book is null)
             {

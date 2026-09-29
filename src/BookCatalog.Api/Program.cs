@@ -1,4 +1,5 @@
 using BookCatalog.Api.Filters;
+using BookCatalog.Domain.Interfaces;
 using BookCatalog.Features.Books.CreateBook;
 using BookCatalog.Features.Books.DeleteBook;
 using BookCatalog.Features.Books.GetBookById;
@@ -22,7 +23,7 @@ builder.Services.AddFluentValidationRulesToSwagger();
 builder.Services.AddProblemDetails();
 
 // Dependency Injection
-builder.Services.AddSingleton<InMemoryBookStore>();
+builder.Services.AddSingleton<IBookRepository, InMemoryBookRepository>();
 builder.Services.AddScoped<GetBookByIdHandler>();
 builder.Services.AddScoped<GetBooksListHandler>();
 builder.Services.AddScoped<CreateBookHandler>();

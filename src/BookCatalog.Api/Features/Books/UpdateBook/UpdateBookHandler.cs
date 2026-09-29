@@ -1,16 +1,17 @@
 ﻿using BookCatalog.Domain;
+using BookCatalog.Domain.Interfaces;
 using BookCatalog.Infrastructure.Storage;
 
 namespace BookCatalog.Features.Books.UpdateBook
 {
     public sealed class UpdateBookHandler
     {
-        private readonly InMemoryBookStore _store;
+        private readonly IBookRepository _bookRepository;
         private readonly ILogger<UpdateBookHandler> _logger;
 
-        public UpdateBookHandler(InMemoryBookStore store, ILogger<UpdateBookHandler> logger)
+        public UpdateBookHandler(IBookRepository store, ILogger<UpdateBookHandler> logger)
         {
-            _store = store;
+            _bookRepository = store;
             _logger = logger;
         }
 
@@ -25,7 +26,7 @@ namespace BookCatalog.Features.Books.UpdateBook
                 PublicationYear = request.PublicationYear
             };
 
-            var isUpdated = await _store.UpdateAsync(updatedBook);
+            var isUpdated = await _bookRepository.UpdateAsync(updatedBook);
 
             if (!isUpdated)
             {
