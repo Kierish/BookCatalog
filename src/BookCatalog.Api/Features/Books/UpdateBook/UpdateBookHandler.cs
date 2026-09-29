@@ -1,5 +1,4 @@
-﻿using BookCatalog.Domain.Entities;
-using BookCatalog.Domain.Interfaces;
+﻿using BookCatalog.Domain.Interfaces;
 
 namespace BookCatalog.Api.Features.Books.UpdateBook
 {
@@ -16,14 +15,7 @@ namespace BookCatalog.Api.Features.Books.UpdateBook
 
         public async Task<bool> HandleAsync(Guid id, UpdateBookRequest request)
         {
-            var updatedBook = new Book
-            {
-                Id = id,
-                Title = request.Title,
-                Author = request.Author,
-                Isbn = request.Isbn,
-                PublicationYear = request.PublicationYear
-            };
+            var updatedBook = request.ToEntity(id);
 
             var isUpdated = await _bookRepository.UpdateAsync(updatedBook);
 

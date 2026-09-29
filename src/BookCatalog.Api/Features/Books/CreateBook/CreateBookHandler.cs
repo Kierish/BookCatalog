@@ -1,5 +1,4 @@
-﻿using BookCatalog.Domain.Entities;
-using BookCatalog.Domain.Interfaces;
+﻿using BookCatalog.Domain.Interfaces;
 
 namespace BookCatalog.Api.Features.Books.CreateBook
 {
@@ -16,13 +15,7 @@ namespace BookCatalog.Api.Features.Books.CreateBook
 
         public async Task<BookResponse> HandleAsync(CreateBookRequest request)
         {
-            var book = new Book
-            {
-                Title = request.Title,
-                Author = request.Author,
-                Isbn = request.Isbn,
-                PublicationYear = request.PublicationYear
-            };
+            var book = request.ToEntity();
 
             await _bookRepository.AddAsync(book);
 
@@ -30,7 +23,7 @@ namespace BookCatalog.Api.Features.Books.CreateBook
                 "Book created successfully. Id: {BookId}, Title: {Title}, Author: {Author}, Isbn: {Isbn}, PublicationYear: {PublicationYear}"
                 , book.Id, book.Title, book.Author, book.Isbn, book.PublicationYear);
 
-            return new BookResponse(book.Id, book.Title, book.Author, book.Isbn, book.PublicationYear);
+            return book.ToResponse();
         }
     }
 }

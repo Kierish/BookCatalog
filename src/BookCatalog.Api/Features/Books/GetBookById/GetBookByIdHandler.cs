@@ -23,7 +23,7 @@ namespace BookCatalog.Api.Features.Books.GetBookById
                 return null;
             }
 
-            return new BookResponse(book.Id, book.Title, book.Author, book.Isbn, book.PublicationYear);
+            return book.ToResponse();
         }
     }
 }

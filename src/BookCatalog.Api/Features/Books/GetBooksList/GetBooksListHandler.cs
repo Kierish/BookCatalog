@@ -16,7 +16,7 @@ namespace BookCatalog.Api.Features.Books.GetBooksList
             var books = await _bookRepository.GetAllAsync();
 
             return books
-                .Select(b => new BookResponse(b.Id, b.Title, b.Author, b.Isbn, b.PublicationYear))
+                .Select(b => b.ToResponse())
                 .ToList();
         }
     }
