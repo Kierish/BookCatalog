@@ -20,8 +20,11 @@ namespace BookCatalog.Api.Filters
             foreach (var argument in context.ActionArguments.Values.Where(v => v != null))
             {
                 var argumentType = argument!.GetType();
-                var validatorType = typeof(IValidator<>).MakeGenericType(argumentType);
 
+                if (argumentType.IsValueType || argumentType == typeof(string))
+                    continue;
+
+                var validatorType = typeof(IValidator<>).MakeGenericType(argumentType);
                 var validator = context.HttpContext.RequestServices.GetService(validatorType) as IValidator;
 
                 if (validator is not null)

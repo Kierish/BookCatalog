@@ -27,11 +27,11 @@ namespace BookCatalog.Infrastructure.Repositories
 
         public Task<bool> UpdateAsync(Book updatedBook)
         {
-            if (!_books.ContainsKey(updatedBook.Id))
+            if (!_books.TryGetValue(updatedBook.Id, out var existing))
                 return Task.FromResult(false);
 
-            _books[updatedBook.Id] = updatedBook;
-            return Task.FromResult(true);
+            var updated = _books.TryUpdate(updatedBook.Id, updatedBook, existing);
+            return Task.FromResult(updated);
         }
 
         public Task<bool> DeleteAsync(Guid id)

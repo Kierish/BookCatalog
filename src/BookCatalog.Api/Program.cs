@@ -33,6 +33,10 @@ builder.Services.AddScoped<DeleteBookHandler>();
 var app = builder.Build();
 
 // HTTP request pipeline
+
+app.UseExceptionHandler();
+app.UseStatusCodePages();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
