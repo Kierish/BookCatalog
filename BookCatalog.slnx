@@ -1,5 +1,10 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/BookCatalog/BookCatalog.csproj" />
+    <Project Path="src/BookCatalog.Api/BookCatalog.Api.csproj" />
+    <Project Path="src/BookCatalog.Domain/BookCatalog.Domain.csproj" Id="968f6773-deaf-4ee0-9b82-511fa92a915c" />
+    <Project Path="src/BookCatalog.Infrastructure/BookCatalog.Infrastructure.csproj" Id="adfdfcff-59bb-4cdc-a17a-c7d1871dc876" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/BookCatalog.UnitTests/BookCatalog.UnitTests.csproj" Id="2988cb41-e4de-4b22-a3b1-30b027b22116" />
   </Folder>
 </Solution>
