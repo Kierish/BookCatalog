@@ -9,5 +9,15 @@
         public int TotalPages => (int)Math.Ceiling(TotalCount / (double)PageSize);
         public bool HasPrevious => Page > 1;
         public bool HasNext => Page < TotalPages;
+
+        public PagedResult<TResult> Map<TResult>(Func<T, TResult> mapper)
+        {
+            return new PagedResult<TResult>(
+                Items.Select(mapper).ToList(),
+                TotalCount,
+                Page,
+                PageSize
+            );
+        }
     }
 }

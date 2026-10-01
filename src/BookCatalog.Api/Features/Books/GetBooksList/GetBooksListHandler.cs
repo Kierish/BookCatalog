@@ -1,4 +1,5 @@
-﻿using BookCatalog.Domain.Interfaces;
+﻿using BookCatalog.Domain.Common;
+using BookCatalog.Domain.Interfaces;
 
 namespace BookCatalog.Api.Features.Books.GetBooksList
 {
@@ -11,13 +12,16 @@ namespace BookCatalog.Api.Features.Books.GetBooksList
             _bookRepository = bookRepository;
         }
 
-        public async Task<IReadOnlyList<BookResponse>> HandleAsync()
+        public async Task<PagedResult<BookResponse>> HandleAsync(GetBooksRequest request)
         {
-            var books = await _bookRepository.GetAllAsync();
+            var pagedBooks = await _bookRepository.GetPagedAsync(
+                request.Title,
+                request.Author,
+                request.PublicationYear,
+                request.Page,
+                request.PageSize);
 
-            return books
-                .Select(b => b.ToResponse())
-                .ToList();
+            return pagedBooks.Map(b => b.ToResponse());
         }
     }
 }

@@ -15,11 +15,6 @@ namespace BookCatalog.Infrastructure.Repositories
             return Task.FromResult(book);
         }
 
-        public Task<IReadOnlyList<Book>> GetAllAsync()
-        {
-            return Task.FromResult<IReadOnlyList<Book>>(_books.Values.ToList());
-        }
-
         public Task<PagedResult<Book>> GetPagedAsync(
             string? title,
             string? author,
@@ -45,6 +40,11 @@ namespace BookCatalog.Infrastructure.Repositories
             }
 
             var totalCount = query.Count();
+
+            if (totalCount == 0 || (page - 1) * pageSize >= totalCount)
+            {
+                return Task.FromResult(new PagedResult<Book>([], totalCount, page, pageSize));
+            }
 
             var items = query
                 .OrderBy(b => b.Title)

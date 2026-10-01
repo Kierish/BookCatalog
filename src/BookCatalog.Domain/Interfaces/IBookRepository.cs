@@ -6,7 +6,6 @@ namespace BookCatalog.Domain.Interfaces
     public interface IBookRepository
     {
         Task<Book?> GetByIdAsync(Guid id);
-        Task<IReadOnlyList<Book>> GetAllAsync();
         Task<PagedResult<Book>> GetPagedAsync(
             string? title,
             string? author,
