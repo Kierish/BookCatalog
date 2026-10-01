@@ -15,9 +15,9 @@ namespace BookCatalog.Api.Features.Books.UpdateBook
 
         public async Task<bool> HandleAsync(Guid id, UpdateBookRequest request)
         {
-            var updatedBook = request.ToEntity(id);
+            var book = request.ToEntity(id);
 
-            var isUpdated = await _bookRepository.UpdateAsync(updatedBook);
+            var isUpdated = await _bookRepository.UpdateAsync(book);
 
             if (!isUpdated)
             {
@@ -27,7 +27,7 @@ namespace BookCatalog.Api.Features.Books.UpdateBook
 
             _logger.LogInformation(
                 "Book updated successfully. Id: {BookId}, Title: {Title}, Author: {Author}, Isbn: {Isbn}, PublicationYear: {PublicationYear}"
-                , updatedBook.Id, updatedBook.Title, updatedBook.Author, updatedBook.Isbn, updatedBook.PublicationYear);
+                , book.Id, book.Title, book.Author, book.Isbn, book.PublicationYear);
 
             return true;
         }

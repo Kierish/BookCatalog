@@ -3,6 +3,7 @@ using BookCatalog.Api.Features.Books.DeleteBook;
 using BookCatalog.Api.Features.Books.GetBookById;
 using BookCatalog.Api.Features.Books.GetBooksList;
 using BookCatalog.Api.Features.Books.UpdateBook;
+using BookCatalog.Domain.Common;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BookCatalog.Api.Features.Books
@@ -24,12 +25,14 @@ namespace BookCatalog.Api.Features.Books
         }
 
         [HttpGet]
-        [ProducesResponseType(typeof(IReadOnlyList<BookResponse>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IReadOnlyList<BookResponse>>> GetAll(
+        [ProducesResponseType(typeof(PagedResult<BookResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(HttpValidationProblemDetails), StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<PagedResult<BookResponse>>> GetBooks(
+            [FromQuery] GetBooksListRequest request,
             [FromServices] GetBooksListHandler handler)
         {
-            var books = await handler.HandleAsync();
-            return Ok(books);
+            var pagedBooks = await handler.HandleAsync(request);
+            return Ok(pagedBooks);
         }
 
         [HttpPost]

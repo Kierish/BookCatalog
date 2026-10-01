@@ -1,4 +1,5 @@
-﻿using BookCatalog.Domain.Entities;
+﻿using BookCatalog.Domain.Common;
+using BookCatalog.Domain.Entities;
 using BookCatalog.Domain.Interfaces;
 using System.Collections.Concurrent;
 
@@ -14,9 +15,45 @@ namespace BookCatalog.Infrastructure.Repositories
             return Task.FromResult(book);
         }
 
-        public Task<IReadOnlyList<Book>> GetAllAsync()
+        public Task<PagedResult<Book>> GetPagedAsync(
+            string? title,
+            string? author,
+            int? publicationYear,
+            int pageNumber,
+            int pageSize)
         {
-            return Task.FromResult<IReadOnlyList<Book>>(_books.Values.ToList());
+            IEnumerable<Book> query = _books.Values;
+
+            if (!string.IsNullOrWhiteSpace(title))
+            {
+                query = query.Where(b => b.Title.Contains(title, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (!string.IsNullOrWhiteSpace(author))
+            {
+                query = query.Where(b => b.Author.Contains(author, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (publicationYear.HasValue)
+            {
+                query = query.Where(b => b.PublicationYear == publicationYear.Value);
+            }
+
+            var totalCount = query.Count();
+
+            if (totalCount == 0 || (pageNumber - 1) * pageSize >= totalCount)
+            {
+                return Task.FromResult(new PagedResult<Book>([], totalCount, pageNumber, pageSize));
+            }
+
+            var items = query
+                .OrderBy(b => b.Title)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var result = new PagedResult<Book>(items, totalCount, pageNumber, pageSize);
+            return Task.FromResult(result);
         }
 
         public Task<bool> AddAsync(Book book)
@@ -25,12 +62,12 @@ namespace BookCatalog.Infrastructure.Repositories
             return Task.FromResult(added);
         }
 
-        public Task<bool> UpdateAsync(Book updatedBook)
+        public Task<bool> UpdateAsync(Book book)
         {
-            if (!_books.TryGetValue(updatedBook.Id, out var existing))
+            if (!_books.TryGetValue(book.Id, out var existingBook))
                 return Task.FromResult(false);
 
-            var updated = _books.TryUpdate(updatedBook.Id, updatedBook, existing);
+            var updated = _books.TryUpdate(book.Id, book, existingBook);
             return Task.FromResult(updated);
         }
 
