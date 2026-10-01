@@ -19,7 +19,7 @@ namespace BookCatalog.Infrastructure.Repositories
             string? title,
             string? author,
             int? publicationYear,
-            int page,
+            int pageNumber,
             int pageSize)
         {
             IEnumerable<Book> query = _books.Values;
@@ -41,18 +41,18 @@ namespace BookCatalog.Infrastructure.Repositories
 
             var totalCount = query.Count();
 
-            if (totalCount == 0 || (page - 1) * pageSize >= totalCount)
+            if (totalCount == 0 || (pageNumber - 1) * pageSize >= totalCount)
             {
-                return Task.FromResult(new PagedResult<Book>([], totalCount, page, pageSize));
+                return Task.FromResult(new PagedResult<Book>([], totalCount, pageNumber, pageSize));
             }
 
             var items = query
                 .OrderBy(b => b.Title)
-                .Skip((page - 1) * pageSize)
+                .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToList();
 
-            var result = new PagedResult<Book>(items, totalCount, page, pageSize);
+            var result = new PagedResult<Book>(items, totalCount, pageNumber, pageSize);
             return Task.FromResult(result);
         }
 
@@ -62,12 +62,12 @@ namespace BookCatalog.Infrastructure.Repositories
             return Task.FromResult(added);
         }
 
-        public Task<bool> UpdateAsync(Book updatedBook)
+        public Task<bool> UpdateAsync(Book book)
         {
-            if (!_books.TryGetValue(updatedBook.Id, out var existing))
+            if (!_books.TryGetValue(book.Id, out var existingBook))
                 return Task.FromResult(false);
 
-            var updated = _books.TryUpdate(updatedBook.Id, updatedBook, existing);
+            var updated = _books.TryUpdate(book.Id, book, existingBook);
             return Task.FromResult(updated);
         }
 

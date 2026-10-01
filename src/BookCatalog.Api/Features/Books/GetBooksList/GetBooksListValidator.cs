@@ -2,11 +2,11 @@
 
 namespace BookCatalog.Api.Features.Books.GetBooksList
 {
-    public sealed class GetBooksValidator : AbstractValidator<GetBooksRequest>
+    public sealed class GetBooksListValidator : AbstractValidator<GetBooksListRequest>
     {
-        public GetBooksValidator()
+        public GetBooksListValidator()
         {
-            RuleFor(x => x.Page)
+            RuleFor(x => x.PageNumber)
                 .GreaterThanOrEqualTo(1)
                 .WithMessage("Page must be at least 1.");
 

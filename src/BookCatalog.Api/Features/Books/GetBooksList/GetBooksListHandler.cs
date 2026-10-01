@@ -12,13 +12,13 @@ namespace BookCatalog.Api.Features.Books.GetBooksList
             _bookRepository = bookRepository;
         }
 
-        public async Task<PagedResult<BookResponse>> HandleAsync(GetBooksRequest request)
+        public async Task<PagedResult<BookResponse>> HandleAsync(GetBooksListRequest request)
         {
             var pagedBooks = await _bookRepository.GetPagedAsync(
                 request.Title,
                 request.Author,
                 request.PublicationYear,
-                request.Page,
+                request.PageNumber,
                 request.PageSize);
 
             return pagedBooks.Map(b => b.ToResponse());

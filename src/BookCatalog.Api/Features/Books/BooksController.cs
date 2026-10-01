@@ -27,8 +27,8 @@ namespace BookCatalog.Api.Features.Books
         [HttpGet]
         [ProducesResponseType(typeof(PagedResult<BookResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(HttpValidationProblemDetails), StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<PagedResult<BookResponse>>> GetAll(
-            [FromQuery] GetBooksRequest request,
+        public async Task<ActionResult<PagedResult<BookResponse>>> GetBooks(
+            [FromQuery] GetBooksListRequest request,
             [FromServices] GetBooksListHandler handler)
         {
             var pagedBooks = await handler.HandleAsync(request);
