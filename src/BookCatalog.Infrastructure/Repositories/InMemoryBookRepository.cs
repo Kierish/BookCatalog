@@ -1,4 +1,5 @@
-﻿using BookCatalog.Domain.Entities;
+﻿using BookCatalog.Domain.Common;
+using BookCatalog.Domain.Entities;
 using BookCatalog.Domain.Interfaces;
 using System.Collections.Concurrent;
 
@@ -17,6 +18,42 @@ namespace BookCatalog.Infrastructure.Repositories
         public Task<IReadOnlyList<Book>> GetAllAsync()
         {
             return Task.FromResult<IReadOnlyList<Book>>(_books.Values.ToList());
+        }
+
+        public Task<PagedResult<Book>> GetPagedAsync(
+            string? title,
+            string? author,
+            int? publicationYear,
+            int page,
+            int pageSize)
+        {
+            IEnumerable<Book> query = _books.Values;
+
+            if (!string.IsNullOrWhiteSpace(title))
+            {
+                query = query.Where(b => b.Title.Contains(title, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (!string.IsNullOrWhiteSpace(author))
+            {
+                query = query.Where(b => b.Author.Contains(author, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (publicationYear.HasValue)
+            {
+                query = query.Where(b => b.PublicationYear == publicationYear.Value);
+            }
+
+            var totalCount = query.Count();
+
+            var items = query
+                .OrderBy(b => b.Title)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var result = new PagedResult<Book>(items, totalCount, page, pageSize);
+            return Task.FromResult(result);
         }
 
         public Task<bool> AddAsync(Book book)
