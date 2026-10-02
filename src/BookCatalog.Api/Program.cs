@@ -1,3 +1,4 @@
+using BookCatalog.Api.Exceptions;
 using BookCatalog.Api.Features.Books.CreateBook;
 using BookCatalog.Api.Features.Books.DeleteBook;
 using BookCatalog.Api.Features.Books.GetBookById;
@@ -11,16 +12,20 @@ using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Services
+// Controllers & Validation
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add<ValidationFilter>(); 
 });
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
+// Swagger
 builder.Services.AddSwaggerGen();
 builder.Services.AddFluentValidationRulesToSwagger();
+
+// Exception Handling
 builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 // Dependency Injection
 builder.Services.AddSingleton<IBookRepository, InMemoryBookRepository>();
