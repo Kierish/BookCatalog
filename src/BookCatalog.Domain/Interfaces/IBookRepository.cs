@@ -12,7 +12,7 @@ namespace BookCatalog.Domain.Interfaces
             int? publicationYear,
             int pageNumber,
             int pageSize);
-        Task<bool> AddAsync(Book book);
+        Task<Book> AddAsync(Book book);
         Task<bool> UpdateAsync(Book book);
         Task<bool> DeleteAsync(Guid id);
     }

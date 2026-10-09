@@ -32,10 +32,25 @@ namespace BookCatalog.UnitTests.Features.Books.GetBooksList
         [Fact]
         public async Task HandleAsync_WhenRepositoryReturnsBooks_ShouldMapToResponse()
         {
+            var martinFowler = new Author { Id = Guid.CreateVersion7(), Name = "Martin Fowler" };
+            var robertMartin = new Author { Id = Guid.CreateVersion7(), Name = "Robert C. Martin" };
+
             var books = new List<Book>
             {
-                new() { Id = Guid.CreateVersion7(), Title = "Refactoring", Author = "Martin Fowler", PublicationYear = 2018 },
-                new() { Id = Guid.CreateVersion7(), Title = "Clean Code", Author = "Robert C. Martin", PublicationYear = 2008 }
+                new() { Id = Guid.CreateVersion7(),
+                    Title = "Refactoring",
+                    AuthorId = martinFowler.Id,
+                    Author = martinFowler,
+                    PublicationYear = 2018
+                },
+                new()
+                {
+                    Id = Guid.CreateVersion7(),
+                    Title = "Clean Code",
+                    AuthorId = robertMartin.Id,
+                    Author = robertMartin,
+                    PublicationYear = 2008
+                }
             };
 
             SetupRepository(new PagedResult<Book>(books, TotalCount: 2, PageNumber: 1, PageSize: 10));

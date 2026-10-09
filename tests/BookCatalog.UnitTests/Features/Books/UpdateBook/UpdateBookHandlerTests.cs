@@ -15,7 +15,7 @@ namespace BookCatalog.UnitTests.Features.Books.UpdateBook
 
         private readonly UpdateBookRequest _baseRequest = new(
             "Refactoring (2nd Edition)",
-            "Martin Fowler",
+            Guid.CreateVersion7(),
             null,
             2018
         );

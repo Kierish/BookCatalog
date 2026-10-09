@@ -17,13 +17,13 @@ namespace BookCatalog.Api.Features.Books.CreateBook
         {
             var book = request.ToEntity();
 
-            await _bookRepository.AddAsync(book);
+            var createdBook = await _bookRepository.AddAsync(book);
 
             _logger.LogInformation(
-                "Book created successfully. Id: {BookId}, Title: {Title}, Author: {Author}, Isbn: {Isbn}, PublicationYear: {PublicationYear}"
-                , book.Id, book.Title, book.Author, book.Isbn, book.PublicationYear);
+                "Book created successfully. Id: {BookId}, Title: {Title}, AuthorId: {AuthorId}, Isbn: {Isbn}, PublicationYear: {PublicationYear}"
+                , createdBook.Id, createdBook.Title, createdBook.AuthorId, createdBook.Isbn, createdBook.PublicationYear);
 
-            return book.ToResponse();
+            return createdBook.ToResponse();
         }
     }
 }

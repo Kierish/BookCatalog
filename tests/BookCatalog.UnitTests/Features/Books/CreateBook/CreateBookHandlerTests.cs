@@ -12,13 +12,13 @@ namespace BookCatalog.UnitTests.Features.Books.CreateBook
         private readonly IBookRepository _bookRepository = Substitute.For<IBookRepository>();
         private readonly ILogger<CreateBookHandler> _logger = Substitute.For<ILogger<CreateBookHandler>>();
         private readonly CreateBookHandler _handler;
+        private readonly Guid _authorId = Guid.CreateVersion7();
 
-        private readonly CreateBookRequest _baseRequest = new(
+        private CreateBookRequest BaseRequest => new(
             "Clean Architecture",
-            "Robert C. Martin",
+            _authorId,
             null,
-            2017
-        );
+            2017);
 
         public CreateBookHandlerTests()
         {
@@ -26,12 +26,30 @@ namespace BookCatalog.UnitTests.Features.Books.CreateBook
         }
 
         [Fact]
-        public async Task HandleAsync_WhenRequestIsValid_ShouldSaveBookWithIdReturnedInResponse()
+        public async Task HandleAsync_WhenRequestIsValid_ShouldAddBookWithIdReturnedInResponse()
         {
-            var response = await _handler.HandleAsync(_baseRequest);
+            _bookRepository
+                .AddAsync(Arg.Any<Book>())
+                .Returns(callInfo =>
+                {
+                    var book = callInfo.Arg<Book>();
+                    book.Author = new Author
+                    {
+                        Id = book.AuthorId,
+                        Name = "Robert C. Martin"
+                    };
+
+                    return Task.FromResult(book);
+                });
+
+            var response = await _handler.HandleAsync(BaseRequest);
 
             response.Id.ShouldNotBe(Guid.Empty);
-            await _bookRepository.Received(1).AddAsync(Arg.Is<Book>(b => b.Id == response.Id));
+
+            await _bookRepository.Received(1).AddAsync(
+                Arg.Is<Book>(book =>
+                    book.Id == response.Id &&
+                    book.AuthorId == _authorId));
         }
     }
 }

@@ -2,7 +2,7 @@
 {
     public sealed record UpdateBookRequest(
         string Title,
-        string Author,
+        Guid AuthorId,
         string? Isbn,
         int PublicationYear
     );

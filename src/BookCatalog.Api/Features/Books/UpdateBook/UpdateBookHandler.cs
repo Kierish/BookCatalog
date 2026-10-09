@@ -26,8 +26,8 @@ namespace BookCatalog.Api.Features.Books.UpdateBook
             }
 
             _logger.LogInformation(
-                "Book updated successfully. Id: {BookId}, Title: {Title}, Author: {Author}, Isbn: {Isbn}, PublicationYear: {PublicationYear}"
-                , book.Id, book.Title, book.Author, book.Isbn, book.PublicationYear);
+                "Book updated successfully. Id: {BookId}, Title: {Title}, AuthorId: {AuthorId}, Isbn: {Isbn}, PublicationYear: {PublicationYear}"
+                , book.Id, book.Title, book.AuthorId, book.Isbn, book.PublicationYear);
 
             return true;
         }

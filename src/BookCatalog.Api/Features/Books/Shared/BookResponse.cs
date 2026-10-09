@@ -3,7 +3,8 @@
     public sealed record BookResponse(
         Guid Id,
         string Title,
-        string Author,
+        Guid AuthorId,
+        string AuthorName,
         string? Isbn,
         int PublicationYear
     );

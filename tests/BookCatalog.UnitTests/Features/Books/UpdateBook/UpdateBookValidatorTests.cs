@@ -9,7 +9,7 @@ namespace BookCatalog.UnitTests.Features.Books.UpdateBook
 
         private static UpdateBookRequest CreateValidRequest() => new(
             Title: "Refactoring: Improving the Design of Existing Code",
-            Author: "Martin Fowler",
+            AuthorId: Guid.CreateVersion7(),
             Isbn: "978-0134757599",
             PublicationYear: 2018
         );
@@ -53,31 +53,17 @@ namespace BookCatalog.UnitTests.Features.Books.UpdateBook
 
         #endregion
 
-        #region Author
-
-        [Theory]
-        [InlineData(null)]
-        [InlineData("")]
-        [InlineData("   ")]
-        public void Validate_WhenAuthorIsNullOrWhiteSpace_ShouldHaveValidationError(string? author)
-        {
-            var request = CreateValidRequest() with { Author = author! };
-
-            var result = _validator.TestValidate(request);
-
-            result.ShouldHaveValidationErrorFor(x => x.Author)
-                  .WithErrorMessage("Author is required.");
-        }
+        #region AuthorId
 
         [Fact]
-        public void Validate_WhenAuthorExceeds200Characters_ShouldHaveValidationError()
+        public void Validate_WhenAuthorIdIsEmpty_ShouldHaveValidationError()
         {
-            var request = CreateValidRequest() with { Author = new string('a', 201) };
+            var request = CreateValidRequest() with { AuthorId = Guid.Empty };
 
             var result = _validator.TestValidate(request);
 
-            result.ShouldHaveValidationErrorFor(x => x.Author)
-                  .WithErrorMessage("Author must be between 1 and 200 characters.");
+            result.ShouldHaveValidationErrorFor(x => x.AuthorId)
+                  .WithErrorMessage("AuthorId is required.");
         }
 
         #endregion

@@ -12,11 +12,9 @@ namespace BookCatalog.Api.Features.Books.CreateBook
                 .Length(1, 200)
                 .WithMessage("Title must be between 1 and 200 characters.");
 
-            RuleFor(x => x.Author)
+            RuleFor(x => x.AuthorId)
                 .NotEmpty()
-                .WithMessage("Author is required.")
-                .Length(1, 200)
-                .WithMessage("Author must be between 1 and 200 characters.");
+                .WithMessage("AuthorId is required.");
 
             RuleFor(x => x.Isbn)
                 .MaximumLength(17)
