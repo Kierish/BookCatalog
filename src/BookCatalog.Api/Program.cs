@@ -39,6 +39,7 @@ builder.Services.AddDbContext<BookCatalogDbContext>(options =>
     options.UseNpgsql(connectionString));
 
 // Dependency Injection
+builder.Services.AddScoped<IAuthorRepository, AuthorRepository>();
 builder.Services.AddScoped<IBookRepository, BookRepository>();
 builder.Services.AddScoped<GetBookByIdHandler>();
 builder.Services.AddScoped<GetBooksListHandler>();

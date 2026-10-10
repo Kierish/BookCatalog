@@ -34,6 +34,7 @@ namespace BookCatalog.Api.Exceptions
             problemDetails.Extensions["traceId"] = httpContext.TraceIdentifier;
 
             httpContext.Response.StatusCode = problemDetails.Status.Value;
+
             await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
 
             return true;

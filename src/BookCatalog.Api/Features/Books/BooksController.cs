@@ -5,12 +5,13 @@ using BookCatalog.Api.Features.Books.GetBooksList;
 using BookCatalog.Api.Features.Books.UpdateBook;
 using BookCatalog.Domain.Common;
 using Microsoft.AspNetCore.Mvc;
+using BookCatalog.Api.Controllers;
 
 namespace BookCatalog.Api.Features.Books
 {
     [ApiController]
     [Route("api/books")]
-    public sealed class BooksController : ControllerBase
+    public sealed class BooksController : ApiControllerBase
     {
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(BookResponse), StatusCodes.Status200OK)]
@@ -20,8 +21,14 @@ namespace BookCatalog.Api.Features.Books
             Guid id,
             [FromServices] GetBookByIdHandler handler)
         {
-            var book = await handler.HandleAsync(id);
-            return book is not null ? Ok(book) : NotFound();
+            var result = await handler.HandleAsync(id);
+
+            if (result.IsFailure)
+            {
+                return HandleFailure(result);
+            }
+
+            return Ok(result.Value);
         }
 
         [HttpGet]
@@ -38,13 +45,22 @@ namespace BookCatalog.Api.Features.Books
         [HttpPost]
         [ProducesResponseType(typeof(BookResponse), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(HttpValidationProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<ActionResult<BookResponse>> Create(
             [FromBody] CreateBookRequest request,
             [FromServices] CreateBookHandler handler)
         {
-            var response = await handler.HandleAsync(request);
+            var result = await handler.HandleAsync(request);
 
-            return CreatedAtAction(nameof(GetById), new { id = response.Id }, response);
+            if (result.IsFailure)
+            {
+                return HandleFailure(result);
+            }
+
+            return CreatedAtAction(
+                nameof(GetById),
+                new { id = result.Value.Id },
+                result.Value);
         }
 
         [HttpPut("{id}")]
@@ -56,8 +72,14 @@ namespace BookCatalog.Api.Features.Books
             [FromBody] UpdateBookRequest request,
             [FromServices] UpdateBookHandler handler)
         {
-            var isUpdated = await handler.HandleAsync(id, request);
-            return isUpdated ? NoContent() : NotFound();
+            var result = await handler.HandleAsync(id, request);
+
+            if (result.IsFailure)
+            {
+                return HandleFailure(result);
+            }
+
+            return NoContent();
         }
 
         [HttpDelete("{id}")]
@@ -68,8 +90,14 @@ namespace BookCatalog.Api.Features.Books
             Guid id,
             [FromServices] DeleteBookHandler handler)
         {
-            var isDeleted = await handler.HandleAsync(id);
-            return isDeleted ? NoContent() : NotFound();
+            var result = await handler.HandleAsync(id);
+
+            if (result.IsFailure)
+            {
+                return HandleFailure(result);
+            }
+
+            return NoContent();
         }
     }
 }

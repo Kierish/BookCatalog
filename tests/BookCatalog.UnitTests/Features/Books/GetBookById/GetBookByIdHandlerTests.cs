@@ -41,20 +41,22 @@ namespace BookCatalog.UnitTests.Features.Books.GetBookById
             var existingBook = CreateExistingBook();
             _bookRepository.GetByIdAsync(existingBook.Id).Returns(existingBook);
 
-            var response = await _handler.HandleAsync(existingBook.Id);
+            var result = await _handler.HandleAsync(existingBook.Id);
 
-            response.ShouldBe(existingBook.ToResponse());
+            result.IsSuccess.ShouldBeTrue();
+            result.Value.ShouldBe(existingBook.ToResponse());
         }
 
         [Fact]
-        public async Task HandleAsync_WhenBookDoesNotExist_ShouldReturnNull()
+        public async Task HandleAsync_WhenBookDoesNotExist_ShouldReturnFailure()
         {
             var nonExistentId = Guid.CreateVersion7();
             _bookRepository.GetByIdAsync(nonExistentId).Returns((Book?)null);
 
-            var response = await _handler.HandleAsync(nonExistentId);
+            var result = await _handler.HandleAsync(nonExistentId);
 
-            response.ShouldBeNull();
+            result.IsFailure.ShouldBeTrue();
+            result.Error.Code.ShouldBe("Books.NotFound");
         }
     }
 }

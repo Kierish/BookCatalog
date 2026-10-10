@@ -10,6 +10,7 @@ namespace BookCatalog.UnitTests.Features.Books.CreateBook
     public sealed class CreateBookHandlerTests
     {
         private readonly IBookRepository _bookRepository = Substitute.For<IBookRepository>();
+        private readonly IAuthorRepository _authorRepository = Substitute.For<IAuthorRepository>();
         private readonly ILogger<CreateBookHandler> _logger = Substitute.For<ILogger<CreateBookHandler>>();
         private readonly CreateBookHandler _handler;
         private readonly Guid _authorId = Guid.CreateVersion7();
@@ -22,7 +23,20 @@ namespace BookCatalog.UnitTests.Features.Books.CreateBook
 
         public CreateBookHandlerTests()
         {
-            _handler = new CreateBookHandler(_bookRepository, _logger);
+            _authorRepository.ExistsAsync(_authorId).Returns(true);
+            _handler = new CreateBookHandler(_bookRepository, _authorRepository, _logger);
+        }
+
+        [Fact]
+        public async Task HandleAsync_WhenAuthorDoesNotExist_ShouldReturnFailure()
+        {
+            _authorRepository.ExistsAsync(_authorId).Returns(false);
+
+            var result = await _handler.HandleAsync(BaseRequest);
+
+            result.IsFailure.ShouldBeTrue();
+            result.Error.Code.ShouldBe("Authors.NotFound");
+            await _bookRepository.DidNotReceive().AddAsync(Arg.Any<Book>());
         }
 
         [Fact]
@@ -42,13 +56,14 @@ namespace BookCatalog.UnitTests.Features.Books.CreateBook
                     return Task.FromResult(book);
                 });
 
-            var response = await _handler.HandleAsync(BaseRequest);
+            var result = await _handler.HandleAsync(BaseRequest);
 
-            response.Id.ShouldNotBe(Guid.Empty);
+            result.IsSuccess.ShouldBeTrue();
+            result.Value.Id.ShouldNotBe(Guid.Empty);
 
             await _bookRepository.Received(1).AddAsync(
                 Arg.Is<Book>(book =>
-                    book.Id == response.Id &&
+                    book.Id == result.Value.Id &&
                     book.AuthorId == _authorId));
         }
     }
