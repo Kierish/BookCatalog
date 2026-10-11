@@ -18,25 +18,27 @@ namespace BookCatalog.UnitTests.Features.Books.DeleteBook
         }
 
         [Fact]
-        public async Task HandleAsync_WhenBookExists_ShouldReturnTrue()
+        public async Task HandleAsync_WhenBookExists_ShouldDeleteBook()
         {
             var bookId = Guid.CreateVersion7();
             _bookRepository.DeleteAsync(bookId).Returns(true);
 
             var result = await _handler.HandleAsync(bookId);
 
-            result.ShouldBeTrue();
+            result.IsSuccess.ShouldBeTrue();
+            await _bookRepository.Received(1).DeleteAsync(bookId);
         }
 
         [Fact]
-        public async Task HandleAsync_WhenBookDoesNotExist_ShouldReturnFalse()
+        public async Task HandleAsync_WhenBookDoesNotExist_ShouldReturnFailure()
         {
             var nonExistentId = Guid.CreateVersion7();
             _bookRepository.DeleteAsync(nonExistentId).Returns(false);
 
             var result = await _handler.HandleAsync(nonExistentId);
 
-            result.ShouldBeFalse();
+            result.IsFailure.ShouldBeTrue();
+            result.Error.Code.ShouldBe("Books.NotFound");
         }
     }
 }

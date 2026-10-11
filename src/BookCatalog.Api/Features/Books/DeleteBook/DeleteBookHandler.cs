@@ -1,4 +1,6 @@
 ﻿using BookCatalog.Domain.Interfaces;
+using BookCatalog.Domain.Common.Results;
+using BookCatalog.Domain.Common.Results.Errors;
 
 namespace BookCatalog.Api.Features.Books.DeleteBook
 {
@@ -13,18 +15,21 @@ namespace BookCatalog.Api.Features.Books.DeleteBook
             _logger = logger;
         }
 
-        public async Task<bool> HandleAsync(Guid id)
+        public async Task<Result> HandleAsync(Guid id)
         {
             var isDeleted = await _bookRepository.DeleteAsync(id);
             
             if (!isDeleted)
             {
-                _logger.LogWarning("Book deletion failed. Book with Id: {BookId} was not found.", id);
-                return false;
+                _logger.LogWarning("Book deletion rejected. BookId: {BookId} was not found.", id);
+
+                return Result.Failure(
+                    BookErrors.NotFound(id));
             }
 
-            _logger.LogInformation("Book deleted successfully. Id: {BookId}", id);
-            return true;
+            _logger.LogInformation("Book deleted. BookId: {BookId}", id);
+
+            return Result.Success();
         }
     }
 }

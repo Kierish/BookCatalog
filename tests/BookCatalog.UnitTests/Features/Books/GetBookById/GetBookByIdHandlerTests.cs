@@ -14,11 +14,18 @@ namespace BookCatalog.UnitTests.Features.Books.GetBookById
         private readonly ILogger<GetBookByIdHandler> _logger = Substitute.For<ILogger<GetBookByIdHandler>>();
         private readonly GetBookByIdHandler _handler;
 
-        private readonly Book _existingBook = new()
+        private readonly Author _author = new()
+        {
+            Id = Guid.CreateVersion7(),
+            Name = "Robert C. Martin"
+        };
+
+        private Book CreateExistingBook() => new()
         {
             Id = Guid.CreateVersion7(),
             Title = "Clean Code",
-            Author = "Robert C. Martin",
+            AuthorId = _author.Id,
+            Author = _author,
             Isbn = "978-0132350884",
             PublicationYear = 2008
         };
@@ -31,22 +38,25 @@ namespace BookCatalog.UnitTests.Features.Books.GetBookById
         [Fact]
         public async Task HandleAsync_WhenBookExists_ShouldReturnMappedBookResponse()
         {
-            _bookRepository.GetByIdAsync(_existingBook.Id).Returns(_existingBook);
+            var existingBook = CreateExistingBook();
+            _bookRepository.GetByIdAsync(existingBook.Id).Returns(existingBook);
 
-            var response = await _handler.HandleAsync(_existingBook.Id);
+            var result = await _handler.HandleAsync(existingBook.Id);
 
-            response.ShouldBe(_existingBook.ToResponse());
+            result.IsSuccess.ShouldBeTrue();
+            result.Value.ShouldBe(existingBook.ToResponse());
         }
 
         [Fact]
-        public async Task HandleAsync_WhenBookDoesNotExist_ShouldReturnNull()
+        public async Task HandleAsync_WhenBookDoesNotExist_ShouldReturnFailure()
         {
             var nonExistentId = Guid.CreateVersion7();
             _bookRepository.GetByIdAsync(nonExistentId).Returns((Book?)null);
 
-            var response = await _handler.HandleAsync(nonExistentId);
+            var result = await _handler.HandleAsync(nonExistentId);
 
-            response.ShouldBeNull();
+            result.IsFailure.ShouldBeTrue();
+            result.Error.Code.ShouldBe("Books.NotFound");
         }
     }
 }

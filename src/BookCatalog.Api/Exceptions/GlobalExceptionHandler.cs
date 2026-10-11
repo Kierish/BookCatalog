@@ -19,8 +19,10 @@ namespace BookCatalog.Api.Exceptions
         {
             _logger.LogError(
                 exception,
-                "An unhandled exception occurred: {Message}",
-                exception.Message
+                "Unhandled exception while processing {Method} {Path}. TraceId: {TraceId}",
+                httpContext.Request.Method,
+                httpContext.Request.Path,
+                httpContext.TraceIdentifier
             );
 
             var problemDetails = new ProblemDetails
@@ -34,6 +36,7 @@ namespace BookCatalog.Api.Exceptions
             problemDetails.Extensions["traceId"] = httpContext.TraceIdentifier;
 
             httpContext.Response.StatusCode = problemDetails.Status.Value;
+
             await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
 
             return true;

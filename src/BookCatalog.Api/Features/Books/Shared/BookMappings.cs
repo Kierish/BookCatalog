@@ -11,7 +11,8 @@ namespace BookCatalog.Api.Features.Books
             return new BookResponse(
                 book.Id,
                 book.Title,
-                book.Author,
+                book.AuthorId,
+                book.Author.Name,
                 book.Isbn,
                 book.PublicationYear
             );
@@ -22,7 +23,7 @@ namespace BookCatalog.Api.Features.Books
             return new Book
             {
                 Title = request.Title,
-                Author = request.Author,
+                AuthorId = request.AuthorId,
                 Isbn = request.Isbn,
                 PublicationYear = request.PublicationYear
             };
@@ -34,7 +35,7 @@ namespace BookCatalog.Api.Features.Books
             {
                 Id = id,
                 Title = request.Title,
-                Author = request.Author,
+                AuthorId = request.AuthorId,
                 Isbn = request.Isbn,
                 PublicationYear = request.PublicationYear
             };

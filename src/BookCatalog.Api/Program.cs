@@ -6,9 +6,11 @@ using BookCatalog.Api.Features.Books.GetBooksList;
 using BookCatalog.Api.Features.Books.UpdateBook;
 using BookCatalog.Api.Filters;
 using BookCatalog.Domain.Interfaces;
+using BookCatalog.Infrastructure.Persistence;
 using BookCatalog.Infrastructure.Repositories;
 using FluentValidation;
 using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,8 +29,18 @@ builder.Services.AddFluentValidationRulesToSwagger();
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
+// Database
+var connectionString = builder.Configuration
+    .GetConnectionString("BookCatalog")
+    ?? throw new InvalidOperationException(
+        "Connection string 'BookCatalog' is not configured.");
+
+builder.Services.AddDbContext<BookCatalogDbContext>(options =>
+    options.UseNpgsql(connectionString));
+
 // Dependency Injection
-builder.Services.AddSingleton<IBookRepository, InMemoryBookRepository>();
+builder.Services.AddScoped<IAuthorRepository, AuthorRepository>();
+builder.Services.AddScoped<IBookRepository, BookRepository>();
 builder.Services.AddScoped<GetBookByIdHandler>();
 builder.Services.AddScoped<GetBooksListHandler>();
 builder.Services.AddScoped<CreateBookHandler>();

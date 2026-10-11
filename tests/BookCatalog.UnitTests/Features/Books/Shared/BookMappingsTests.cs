@@ -15,12 +15,14 @@ namespace BookCatalog.UnitTests.Features.Books.Shared
         [InlineData(null)]
         public void ToResponse_FromBook_ShouldMapAllFieldsToResponse(string? isbn)
         {
-            var id = Guid.CreateVersion7();
+            var author = new Author { Id = Guid.CreateVersion7(), Name = "Robert C. Martin" };
+
             var book = new Book
             {
-                Id = id,
+                Id = Guid.CreateVersion7(),
                 Title = "Clean Code",
-                Author = "Robert C. Martin",
+                AuthorId = author.Id,
+                Author = author,
                 Isbn = isbn,
                 PublicationYear = 2008
             };
@@ -30,7 +32,8 @@ namespace BookCatalog.UnitTests.Features.Books.Shared
             response.ShouldSatisfyAllConditions(
                 () => response.Id.ShouldBe(book.Id),
                 () => response.Title.ShouldBe(book.Title),
-                () => response.Author.ShouldBe(book.Author),
+                () => response.AuthorId.ShouldBe(author.Id),
+                () => response.AuthorName.ShouldBe(author.Name),
                 () => response.Isbn.ShouldBe(book.Isbn),
                 () => response.PublicationYear.ShouldBe(book.PublicationYear));
         }
@@ -44,14 +47,15 @@ namespace BookCatalog.UnitTests.Features.Books.Shared
         [InlineData(null)]
         public void ToEntity_FromCreateRequest_ShouldMapAllFieldsAndGenerateId(string? isbn)
         {
-            var request = new CreateBookRequest("Clean Architecture", "Robert C. Martin", isbn, 2017);
+            var authorId = Guid.CreateVersion7();
+            var request = new CreateBookRequest("Clean Architecture", authorId, isbn, 2017);
 
             var book = request.ToEntity();
 
             book.ShouldSatisfyAllConditions(
                 () => book.Id.ShouldNotBe(Guid.Empty), 
                 () => book.Title.ShouldBe(request.Title),
-                () => book.Author.ShouldBe(request.Author),
+                () => book.AuthorId.ShouldBe(request.AuthorId),
                 () => book.Isbn.ShouldBe(request.Isbn),
                 () => book.PublicationYear.ShouldBe(request.PublicationYear));
         }
@@ -66,14 +70,15 @@ namespace BookCatalog.UnitTests.Features.Books.Shared
         public void ToEntity_FromUpdateRequest_ShouldMapAllFields(string? isbn)
         {
             var id = Guid.CreateVersion7();
-            var request = new UpdateBookRequest("Refactoring", "Martin Fowler", isbn, 2018);
+            var authorId = Guid.CreateVersion7();
+            var request = new UpdateBookRequest("Refactoring", authorId, isbn, 2018);
 
             var book = request.ToEntity(id);
 
             book.ShouldSatisfyAllConditions(
                 () => book.Id.ShouldBe(id),
                 () => book.Title.ShouldBe("Refactoring"),
-                () => book.Author.ShouldBe("Martin Fowler"),
+                () => book.AuthorId.ShouldBe(authorId),
                 () => book.Isbn.ShouldBe(isbn),
                 () => book.PublicationYear.ShouldBe(2018));
         }
