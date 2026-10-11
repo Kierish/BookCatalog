@@ -21,12 +21,14 @@ namespace BookCatalog.Api.Features.Books.DeleteBook
             
             if (!isDeleted)
             {
-                _logger.LogWarning("Book deletion failed. Book with Id: {BookId} was not found.", id);
+                _logger.LogWarning("Book deletion rejected. BookId: {BookId} was not found.", id);
+
                 return Result.Failure(
                     BookErrors.NotFound(id));
             }
 
-            _logger.LogInformation("Book deleted successfully. Id: {BookId}", id);
+            _logger.LogInformation("Book deleted. BookId: {BookId}", id);
+
             return Result.Success();
         }
     }

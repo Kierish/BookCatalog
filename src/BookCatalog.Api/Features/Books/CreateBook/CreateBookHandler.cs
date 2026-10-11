@@ -26,6 +26,9 @@ namespace BookCatalog.Api.Features.Books.CreateBook
 
             if (!authorExists)
             {
+                _logger.LogInformation(
+                    "Book creation rejected. AuthorId: {AuthorId} was not found.", request.AuthorId);
+
                 return Result<BookResponse>.Failure(
                     AuthorErrors.NotFound(request.AuthorId));
             }
@@ -35,8 +38,7 @@ namespace BookCatalog.Api.Features.Books.CreateBook
             var createdBook = await _bookRepository.AddAsync(book);
 
             _logger.LogInformation(
-                "Book created successfully. Id: {BookId}, Title: {Title}, AuthorId: {AuthorId}, Isbn: {Isbn}, PublicationYear: {PublicationYear}"
-                , createdBook.Id, createdBook.Title, createdBook.AuthorId, createdBook.Isbn, createdBook.PublicationYear);
+                "Book created. BookId: {BookId}, AuthorId: {AuthorId}", createdBook.Id, createdBook.AuthorId);
 
             return Result<BookResponse>.Success(createdBook.ToResponse());
         }

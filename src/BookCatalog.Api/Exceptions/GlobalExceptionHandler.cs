@@ -19,8 +19,10 @@ namespace BookCatalog.Api.Exceptions
         {
             _logger.LogError(
                 exception,
-                "An unhandled exception occurred: {Message}",
-                exception.Message
+                "Unhandled exception while processing {Method} {Path}. TraceId: {TraceId}",
+                httpContext.Request.Method,
+                httpContext.Request.Path,
+                httpContext.TraceIdentifier
             );
 
             var problemDetails = new ProblemDetails
