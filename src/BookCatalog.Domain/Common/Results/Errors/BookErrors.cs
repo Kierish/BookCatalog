@@ -1,6 +1,5 @@
-using BookCatalog.Domain.Common.Results;
 
-namespace BookCatalog.Domain.Errors
+namespace BookCatalog.Domain.Common.Results.Errors
 {
     public static class BookErrors
     {

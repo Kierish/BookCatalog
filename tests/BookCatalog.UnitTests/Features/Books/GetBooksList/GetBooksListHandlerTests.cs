@@ -1,6 +1,7 @@
 ﻿using BookCatalog.Api.Features.Books;
 using BookCatalog.Api.Features.Books.GetBooksList;
 using BookCatalog.Domain.Common;
+using BookCatalog.Domain.Common.Results.Queries;
 using BookCatalog.Domain.Entities;
 using BookCatalog.Domain.Interfaces;
 using NSubstitute;
@@ -21,12 +22,24 @@ namespace BookCatalog.UnitTests.Features.Books.GetBooksList
         [Fact]
         public async Task HandleAsync_WhenCalled_ShouldPassRequestParametersToRepository()
         {
-            var request = new GetBooksListRequest("Clean", "Martin", 2008, PageNumber: 2, PageSize: 25);
+            var authorId = Guid.CreateVersion7();
+            var request = new GetBooksListRequest(
+                Search: "Clean",
+                AuthorId: authorId,
+                PublicationYear: 2008,
+                PageNumber: 2,
+                PageSize: 25);
             SetupRepository(new PagedResult<Book>([], TotalCount: 0, PageNumber: 1, PageSize: 10));
 
             await _handler.HandleAsync(request);
 
-            await _bookRepository.Received(1).GetPagedAsync("Clean", "Martin", 2008, 2, 25);
+            await _bookRepository.Received(1).GetPagedAsync(
+                Arg.Is<BookQuery>(query =>
+                    query.Search == "Clean" &&
+                    query.AuthorId == authorId &&
+                    query.PublicationYear == 2008 &&
+                    query.PageNumber == 2 &&
+                    query.PageSize == 25));
         }
 
         [Fact]
@@ -63,12 +76,7 @@ namespace BookCatalog.UnitTests.Features.Books.GetBooksList
         private void SetupRepository(PagedResult<Book> page)
         {
             _bookRepository
-                .GetPagedAsync(
-                    Arg.Any<string?>(),
-                    Arg.Any<string?>(),
-                    Arg.Any<int?>(),
-                    Arg.Any<int>(),
-                    Arg.Any<int>())
+                .GetPagedAsync(Arg.Any<BookQuery>())
                 .Returns(page);
         }
     }

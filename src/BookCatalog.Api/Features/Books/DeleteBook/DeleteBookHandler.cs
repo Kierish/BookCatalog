@@ -1,7 +1,6 @@
 ﻿using BookCatalog.Domain.Interfaces;
-
 using BookCatalog.Domain.Common.Results;
-using BookCatalog.Domain.Errors;
+using BookCatalog.Domain.Common.Results.Errors;
 
 namespace BookCatalog.Api.Features.Books.DeleteBook
 {

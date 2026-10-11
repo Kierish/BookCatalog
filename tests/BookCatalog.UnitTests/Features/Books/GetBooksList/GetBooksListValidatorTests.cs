@@ -23,12 +23,11 @@ namespace BookCatalog.UnitTests.Features.Books.GetBooksList
         public void Validate_WhenAllFiltersArePopulatedAndValid_ShouldNotHaveAnyValidationErrors()
         {
             var request = new GetBooksListRequest(
-                Title: "Clean Code",
-                Author: "Robert C. Martin",
+                Search: "Clean Code",
+                AuthorId: Guid.CreateVersion7(),
                 PublicationYear: 2008,
                 PageNumber: 2,
-                PageSize: 25
-            );
+                PageSize: 25);
 
             var result = _validator.TestValidate(request);
 
@@ -49,7 +48,7 @@ namespace BookCatalog.UnitTests.Features.Books.GetBooksList
             var result = _validator.TestValidate(request);
 
             result.ShouldHaveValidationErrorFor(x => x.PageNumber)
-                  .WithErrorMessage("Page must be at least 1.");
+                  .WithErrorMessage("PageNumber must be at least 1.");
         }
 
         [Theory]
@@ -96,60 +95,66 @@ namespace BookCatalog.UnitTests.Features.Books.GetBooksList
 
         #endregion
 
-        #region Title Filter
+        #region Search
 
         [Theory]
         [InlineData(null)]
         [InlineData("")]
         [InlineData("   ")]
         [InlineData("Domain-Driven Design")]
-        public void Validate_WhenTitleIsNullOrWhiteSpaceOrValidLength_ShouldNotHaveValidationError(string? title)
+        public void Validate_WhenSearchIsNullOrWhiteSpaceOrValidLength_ShouldNotHaveValidationError(string? search)
         {
-            var request = new GetBooksListRequest(Title: title);
+            var request = new GetBooksListRequest(Search: search);
 
             var result = _validator.TestValidate(request);
 
-            result.ShouldNotHaveValidationErrorFor(x => x.Title);
+            result.ShouldNotHaveValidationErrorFor(x => x.Search);
         }
 
         [Fact]
-        public void Validate_WhenTitleExceeds200Characters_ShouldHaveValidationError()
+        public void Validate_WhenSearchExceeds200Characters_ShouldHaveValidationError()
         {
-            var request = new GetBooksListRequest(Title: new string('a', 201));
+            var request = new GetBooksListRequest(Search: new string('a', 201));
 
             var result = _validator.TestValidate(request);
 
-            result.ShouldHaveValidationErrorFor(x => x.Title)
-                  .WithErrorMessage("Title must not exceed 200 characters.");
+            result.ShouldHaveValidationErrorFor(x => x.Search)
+                  .WithErrorMessage("Search must not exceed 200 characters.");
         }
 
         #endregion
 
-        #region Author Filter
+        #region AuthorId Filter
 
-        [Theory]
-        [InlineData(null)]
-        [InlineData("")]
-        [InlineData("   ")]
-        [InlineData("Martin Fowler")]
-        public void Validate_WhenAuthorIsNullOrWhiteSpaceOrValidLength_ShouldNotHaveValidationError(string? author)
+        [Fact]
+        public void Validate_WhenAuthorIdIsNull_ShouldNotHaveValidationError()
         {
-            var request = new GetBooksListRequest(Author: author);
+            var request = new GetBooksListRequest(AuthorId: null);
 
             var result = _validator.TestValidate(request);
 
-            result.ShouldNotHaveValidationErrorFor(x => x.Author);
+            result.ShouldNotHaveValidationErrorFor(x => x.AuthorId);
         }
 
         [Fact]
-        public void Validate_WhenAuthorExceeds200Characters_ShouldHaveValidationError()
+        public void Validate_WhenAuthorIdIsValid_ShouldNotHaveValidationError()
         {
-            var request = new GetBooksListRequest(Author: new string('a', 201));
+            var request = new GetBooksListRequest(AuthorId: Guid.CreateVersion7());
 
             var result = _validator.TestValidate(request);
 
-            result.ShouldHaveValidationErrorFor(x => x.Author)
-                  .WithErrorMessage("Author must not exceed 200 characters.");
+            result.ShouldNotHaveValidationErrorFor(x => x.AuthorId);
+        }
+
+        [Fact]
+        public void Validate_WhenAuthorIdIsEmpty_ShouldHaveValidationError()
+        {
+            var request = new GetBooksListRequest(AuthorId: Guid.Empty);
+
+            var result = _validator.TestValidate(request);
+
+            result.ShouldHaveValidationErrorFor(x => x.AuthorId)
+                  .WithErrorMessage("AuthorId must not be empty.");
         }
 
         #endregion

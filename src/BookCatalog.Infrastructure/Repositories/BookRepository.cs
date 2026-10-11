@@ -1,4 +1,5 @@
 using BookCatalog.Domain.Common;
+using BookCatalog.Domain.Common.Results.Queries;
 using BookCatalog.Domain.Entities;
 using BookCatalog.Domain.Interfaces;
 using BookCatalog.Infrastructure.Persistence;
@@ -23,50 +24,59 @@ namespace BookCatalog.Infrastructure.Repositories
                 .SingleOrDefaultAsync(book => book.Id == id);
         }
 
-        public async Task<PagedResult<Book>> GetPagedAsync(
-            string? title,
-            string? author,
-            int? publicationYear,
-            int pageNumber,
-            int pageSize)
+        public async Task<PagedResult<Book>> GetPagedAsync(BookQuery query)
         {
-            IQueryable<Book> query = _dbContext.Books
+            IQueryable<Book> booksQuery = _dbContext.Books
                 .AsNoTracking()
                 .Include(book => book.Author);
 
-            if (!string.IsNullOrWhiteSpace(title))
+            if (!string.IsNullOrWhiteSpace(query.Search))
             {
-                query = query.Where(book =>
-                    book.Title == title);
+                var search = query.Search.Trim();
+                var escapedSearch = EscapeLikePattern(search);
+                var pattern = $"%{escapedSearch}%";
+
+                booksQuery = booksQuery.Where(book =>
+                    EF.Functions.ILike(book.Title, pattern, "\\") ||
+                    EF.Functions.ILike(book.Author.Name, pattern, "\\"));
             }
 
-            if (!string.IsNullOrWhiteSpace(author))
+            if (query.AuthorId.HasValue)
             {
-                query = query.Where(book =>
-                    book.Author.Name == author);
+                booksQuery = booksQuery.Where(book =>
+                    book.AuthorId == query.AuthorId.Value);
             }
 
-            if (publicationYear.HasValue)
+            if (query.PublicationYear.HasValue)
             {
-                query = query.Where(book =>
-                    book.PublicationYear == publicationYear.Value);
+                booksQuery = booksQuery.Where(book =>
+                    book.PublicationYear == query.PublicationYear.Value);
             }
 
-            var totalCount = await query.CountAsync();
+            var totalCount = await booksQuery.CountAsync();
+            var itemsToSkip = (query.PageNumber - 1) * query.PageSize;
 
-            if (totalCount == 0 || (pageNumber - 1) * pageSize >= totalCount)
+            if (totalCount == 0 || itemsToSkip >= totalCount)
             {
-                return new PagedResult<Book>([], totalCount, pageNumber, pageSize);
+                return new PagedResult<Book>([], totalCount, query.PageNumber, query.PageSize);
             }
 
-            var books = await query
+            var books = await booksQuery
                 .OrderBy(book => book.Title)
                 .ThenBy(book => book.Id)
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
+                .Skip(itemsToSkip)
+                .Take(query.PageSize)
                 .ToListAsync();
 
-            return new PagedResult<Book>(books, totalCount, pageNumber, pageSize);
+            return new PagedResult<Book>(books, totalCount, query.PageNumber, query.PageSize);
+        }
+
+        private static string EscapeLikePattern(string value)
+        {
+            return value
+                .Replace("\\", "\\\\")
+                .Replace("%", "\\%")
+                .Replace("_", "\\_");
         }
 
         public async Task<Book> AddAsync(Book book)

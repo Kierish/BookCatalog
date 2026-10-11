@@ -1,4 +1,5 @@
 ﻿using BookCatalog.Domain.Common;
+using BookCatalog.Domain.Common.Results.Queries;
 using BookCatalog.Domain.Entities;
 
 namespace BookCatalog.Domain.Interfaces
@@ -6,12 +7,7 @@ namespace BookCatalog.Domain.Interfaces
     public interface IBookRepository
     {
         Task<Book?> GetByIdAsync(Guid id);
-        Task<PagedResult<Book>> GetPagedAsync(
-            string? title,
-            string? author,
-            int? publicationYear,
-            int pageNumber,
-            int pageSize);
+        Task<PagedResult<Book>> GetPagedAsync(BookQuery query);
         Task<Book> AddAsync(Book book);
         Task<bool> UpdateAsync(Book book);
         Task<bool> DeleteAsync(Guid id);
