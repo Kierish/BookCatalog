@@ -1,4 +1,4 @@
-namespace BookCatalog.Domain.Common.Results.Queries
+namespace BookCatalog.Domain.Common.Queries
 {
     public sealed record BookQuery(
         string? Search,

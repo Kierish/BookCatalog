@@ -75,14 +75,32 @@ namespace BookCatalog.UnitTests.Features.Books.UpdateBook
         [InlineData("")]
         [InlineData("   ")]
         [InlineData("978-0134757599")]
-        [InlineData("12345678901234567")] 
-        public void Validate_WhenIsbnIsOptionalOrWithin17Characters_ShouldNotHaveValidationError(string? isbn)
+        [InlineData("9780134757599")]
+        [InlineData("0-306-40615-2")]
+        [InlineData("0-8044-2957-X")]
+        public void Validate_WhenIsbnIsOptionalOrValid_ShouldNotHaveValidationError(string? isbn)
         {
             var request = CreateValidRequest() with { Isbn = isbn };
 
             var result = _validator.TestValidate(request);
 
             result.ShouldNotHaveValidationErrorFor(x => x.Isbn);
+        }
+
+        [Theory]
+        [InlineData("0-306-40615-3")]
+        [InlineData("978-0134757598")]
+        [InlineData("4006381333931")]
+        [InlineData("978-01347A7599")]
+        [InlineData("123456789")]
+        public void Validate_WhenIsbnIsInvalid_ShouldHaveValidationError(string isbn)
+        {
+            var request = CreateValidRequest() with { Isbn = isbn };
+
+            var result = _validator.TestValidate(request);
+
+            result.ShouldHaveValidationErrorFor(x => x.Isbn)
+                  .WithErrorMessage("ISBN must be a valid ISBN-10 or ISBN-13.");
         }
 
         [Fact]

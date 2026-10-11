@@ -1,5 +1,5 @@
 ﻿using BookCatalog.Domain.Common;
-using BookCatalog.Domain.Common.Results.Queries;
+using BookCatalog.Domain.Common.Queries;
 using BookCatalog.Domain.Interfaces;
 
 namespace BookCatalog.Api.Features.Books.GetBooksList

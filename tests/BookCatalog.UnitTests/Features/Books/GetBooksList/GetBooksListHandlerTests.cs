@@ -1,7 +1,7 @@
 ﻿using BookCatalog.Api.Features.Books;
 using BookCatalog.Api.Features.Books.GetBooksList;
 using BookCatalog.Domain.Common;
-using BookCatalog.Domain.Common.Results.Queries;
+using BookCatalog.Domain.Common.Queries;
 using BookCatalog.Domain.Entities;
 using BookCatalog.Domain.Interfaces;
 using NSubstitute;
