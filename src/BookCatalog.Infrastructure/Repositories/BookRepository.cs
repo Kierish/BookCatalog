@@ -26,6 +26,7 @@ namespace BookCatalog.Infrastructure.Repositories
             return _dbContext.Books
                 .AsNoTracking()
                 .Include(book => book.Author)
+                .Include(book => book.Loans.Where(loan => loan.ReturnedAt == null))
                 .SingleOrDefaultAsync(book => book.Id == id);
         }
 
@@ -33,7 +34,8 @@ namespace BookCatalog.Infrastructure.Repositories
         {
             IQueryable<Book> booksQuery = _dbContext.Books
                 .AsNoTracking()
-                .Include(book => book.Author);
+                .Include(book => book.Author)
+                .Include(book => book.Loans.Where(loan => loan.ReturnedAt == null));
 
             if (!string.IsNullOrWhiteSpace(query.Search))
             {

@@ -14,7 +14,8 @@ namespace BookCatalog.Api.Features.Books
                 book.AuthorId,
                 book.Author.Name,
                 book.Isbn,
-                book.PublicationYear
+                book.PublicationYear,
+                book.Loans.Any(loan => loan.ReturnedAt is null)
             );
         }
 

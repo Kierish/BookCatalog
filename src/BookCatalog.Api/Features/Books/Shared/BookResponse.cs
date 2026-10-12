@@ -6,6 +6,7 @@
         Guid AuthorId,
         string AuthorName,
         string? Isbn,
-        int PublicationYear
+        int PublicationYear,
+        bool IsBorrowed
     );
 }
