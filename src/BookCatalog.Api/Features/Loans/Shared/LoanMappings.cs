@@ -1,4 +1,5 @@
 using BookCatalog.Api.Features.Loans.BorrowBook;
+using BookCatalog.Api.Features.Loans.GetLoanHistory;
 using BookCatalog.Domain.Entities;
 
 namespace BookCatalog.Api.Features.Loans
@@ -21,6 +22,19 @@ namespace BookCatalog.Api.Features.Loans
                 loan.Id,
                 loan.BookId,
                 loan.UserId,
+                loan.BorrowedAt,
+                loan.ReturnedAt
+            );
+        }
+
+        public static LoanHistoryResponse ToHistoryResponse(this Loan loan)
+        {
+            return new LoanHistoryResponse(
+                loan.Id,
+                loan.BookId,
+                loan.Book.Title,
+                loan.UserId,
+                loan.User.Name,
                 loan.BorrowedAt,
                 loan.ReturnedAt
             );

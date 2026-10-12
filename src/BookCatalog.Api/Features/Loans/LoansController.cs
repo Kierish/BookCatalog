@@ -1,6 +1,8 @@
 using BookCatalog.Api.Controllers;
 using BookCatalog.Api.Features.Loans.BorrowBook;
+using BookCatalog.Api.Features.Loans.GetLoanHistory;
 using BookCatalog.Api.Features.Loans.ReturnBook;
+using BookCatalog.Domain.Common;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BookCatalog.Api.Features.Loans
@@ -9,6 +11,17 @@ namespace BookCatalog.Api.Features.Loans
     [Route("api/loans")]
     public sealed class LoansController : ApiControllerBase
     {
+        [HttpGet]
+        [ProducesResponseType(typeof(PagedResult<LoanHistoryResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(HttpValidationProblemDetails), StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<PagedResult<LoanHistoryResponse>>> GetHistory(
+            [FromQuery] GetLoanHistoryRequest request,
+            [FromServices] GetLoanHistoryHandler handler)
+        {
+            var history = await handler.HandleAsync(request);
+            return Ok(history);
+        }
+
         [HttpPost]
         [ProducesResponseType(typeof(LoanResponse), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(HttpValidationProblemDetails), StatusCodes.Status400BadRequest)]

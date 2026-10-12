@@ -1,3 +1,5 @@
+using BookCatalog.Domain.Common;
+using BookCatalog.Domain.Common.Queries;
 using BookCatalog.Domain.Entities;
 using BookCatalog.Domain.Interfaces;
 using BookCatalog.Infrastructure.Persistence;
@@ -28,6 +30,51 @@ namespace BookCatalog.Infrastructure.Repositories
         {
             return _dbContext.Loans
                 .SingleOrDefaultAsync(loan => loan.Id == id);
+        }
+
+        public async Task<PagedResult<Loan>> GetPagedAsync(LoanQuery query)
+        {
+            IQueryable<Loan> loansQuery = _dbContext.Loans
+                .AsNoTracking()
+                .Include(loan => loan.Book)
+                .Include(loan => loan.User);
+
+            if (query.BookId.HasValue)
+            {
+                loansQuery = loansQuery.Where(
+                    loan => loan.BookId == query.BookId.Value);
+            }
+
+            if (query.UserId.HasValue)
+            {
+                loansQuery = loansQuery.Where(
+                    loan => loan.UserId == query.UserId.Value);
+            }
+
+            var totalCount = await loansQuery.CountAsync();
+            var itemsToSkip = (long)(query.PageNumber - 1) * query.PageSize;
+
+            if (totalCount == 0 || itemsToSkip >= totalCount)
+            {
+                return new PagedResult<Loan>(
+                    [],
+                    totalCount,
+                    query.PageNumber,
+                    query.PageSize);
+            }
+
+            var loans = await loansQuery
+                .OrderByDescending(loan => loan.BorrowedAt)
+                .ThenByDescending(loan => loan.Id)
+                .Skip((int)itemsToSkip)
+                .Take(query.PageSize)
+                .ToListAsync();
+
+            return new PagedResult<Loan>(
+                loans,
+                totalCount,
+                query.PageNumber,
+                query.PageSize);
         }
 
         public async Task<bool> TryBorrowAsync(Loan loan)

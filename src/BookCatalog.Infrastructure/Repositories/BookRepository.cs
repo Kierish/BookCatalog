@@ -59,7 +59,7 @@ namespace BookCatalog.Infrastructure.Repositories
             }
 
             var totalCount = await booksQuery.CountAsync();
-            var itemsToSkip = (query.PageNumber - 1) * query.PageSize;
+            var itemsToSkip = (long)(query.PageNumber - 1) * query.PageSize;
 
             if (totalCount == 0 || itemsToSkip >= totalCount)
             {
@@ -69,7 +69,7 @@ namespace BookCatalog.Infrastructure.Repositories
             var books = await booksQuery
                 .OrderBy(book => book.Title)
                 .ThenBy(book => book.Id)
-                .Skip(itemsToSkip)
+                .Skip((int)itemsToSkip)
                 .Take(query.PageSize)
                 .ToListAsync();
 
