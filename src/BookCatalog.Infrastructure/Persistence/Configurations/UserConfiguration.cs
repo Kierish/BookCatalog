@@ -8,7 +8,11 @@ namespace BookCatalog.Infrastructure.Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<User> builder)
         {
-            builder.ToTable("Users");
+            builder.ToTable(
+                "Users",
+                tableBuilder => tableBuilder.HasCheckConstraint(
+                    "CK_Users_ActiveLoanCount",
+                    "\"ActiveLoanCount\" >= 0"));
 
             builder.HasKey(user => user.Id);
 
@@ -18,6 +22,21 @@ namespace BookCatalog.Infrastructure.Persistence.Configurations
             builder.Property(user => user.Name)
                 .HasMaxLength(200)
                 .IsRequired();
+
+            builder.Property(user => user.ActiveLoanCount)
+                .IsRequired();
+
+            builder.HasData(
+                new User
+                {
+                    Id = Guid.Parse("0199c500-0000-7000-8000-000000000101"),
+                    Name = "Alice Johnson"
+                },
+                new User
+                {
+                    Id = Guid.Parse("0199c500-0000-7000-8000-000000000102"),
+                    Name = "Bob Smith"
+                });
         }
     }
 }

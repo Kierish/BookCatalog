@@ -6,6 +6,8 @@ namespace BookCatalog.Domain.Entities
 
         public required string Name { get; set; }
 
+        public int ActiveLoanCount { get; set; }
+
         public ICollection<Loan> Loans { get; set; } = [];
     }
 }

@@ -16,6 +16,7 @@ namespace BookCatalog.Api.Controllers
             var statusCode = result.Error.Type switch
             {
                 ErrorType.NotFound => StatusCodes.Status404NotFound,
+                ErrorType.Conflict => StatusCodes.Status409Conflict,
                 _ => StatusCodes.Status500InternalServerError
             };
 

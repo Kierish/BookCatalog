@@ -35,7 +35,57 @@ namespace BookCatalog.UnitTests.Features.Books.Shared
                 () => response.AuthorId.ShouldBe(author.Id),
                 () => response.AuthorName.ShouldBe(author.Name),
                 () => response.Isbn.ShouldBe(book.Isbn),
-                () => response.PublicationYear.ShouldBe(book.PublicationYear));
+                () => response.PublicationYear.ShouldBe(book.PublicationYear),
+                () => response.IsBorrowed.ShouldBeFalse());
+        }
+
+        [Fact]
+        public void ToResponse_WhenBookHasActiveLoan_ShouldSetIsBorrowedTrue()
+        {
+            var author = new Author { Id = Guid.CreateVersion7(), Name = "Robert C. Martin" };
+            var book = new Book
+            {
+                Id = Guid.CreateVersion7(),
+                Title = "Clean Code",
+                AuthorId = author.Id,
+                Author = author,
+                PublicationYear = 2008
+            };
+            book.Loans.Add(new Loan
+            {
+                BookId = book.Id,
+                UserId = Guid.CreateVersion7(),
+                BorrowedAt = DateTimeOffset.UtcNow
+            });
+
+            var response = book.ToResponse();
+
+            response.IsBorrowed.ShouldBeTrue();
+        }
+
+        [Fact]
+        public void ToResponse_WhenBookHasOnlyReturnedLoans_ShouldSetIsBorrowedFalse()
+        {
+            var author = new Author { Id = Guid.CreateVersion7(), Name = "Robert C. Martin" };
+            var book = new Book
+            {
+                Id = Guid.CreateVersion7(),
+                Title = "Clean Code",
+                AuthorId = author.Id,
+                Author = author,
+                PublicationYear = 2008
+            };
+            book.Loans.Add(new Loan
+            {
+                BookId = book.Id,
+                UserId = Guid.CreateVersion7(),
+                BorrowedAt = DateTimeOffset.UtcNow.AddDays(-1),
+                ReturnedAt = DateTimeOffset.UtcNow
+            });
+
+            var response = book.ToResponse();
+
+            response.IsBorrowed.ShouldBeFalse();
         }
 
         #endregion

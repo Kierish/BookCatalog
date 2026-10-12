@@ -4,6 +4,9 @@ using BookCatalog.Api.Features.Books.DeleteBook;
 using BookCatalog.Api.Features.Books.GetBookById;
 using BookCatalog.Api.Features.Books.GetBooksList;
 using BookCatalog.Api.Features.Books.UpdateBook;
+using BookCatalog.Api.Features.Loans.BorrowBook;
+using BookCatalog.Api.Features.Loans.GetLoanHistory;
+using BookCatalog.Api.Features.Loans.ReturnBook;
 using BookCatalog.Api.Filters;
 using BookCatalog.Domain.Interfaces;
 using BookCatalog.Infrastructure.Persistence;
@@ -39,13 +42,28 @@ builder.Services.AddDbContext<BookCatalogDbContext>(options =>
     options.UseNpgsql(connectionString));
 
 // Dependency Injection
+
+// Time Abstraction
+builder.Services.AddSingleton(TimeProvider.System);
+
+// Repositories 
 builder.Services.AddScoped<IAuthorRepository, AuthorRepository>();
 builder.Services.AddScoped<IBookRepository, BookRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ILoanRepository, LoanRepository>();
+
+// Feature Handlers (Book Catalog)
 builder.Services.AddScoped<GetBookByIdHandler>();
 builder.Services.AddScoped<GetBooksListHandler>();
 builder.Services.AddScoped<CreateBookHandler>();
 builder.Services.AddScoped<UpdateBookHandler>();
 builder.Services.AddScoped<DeleteBookHandler>();
+
+// Feature Handlers (Lending)
+builder.Services.AddScoped<BorrowBookHandler>();
+builder.Services.AddScoped<ReturnBookHandler>();
+builder.Services.AddScoped<GetLoanHistoryHandler>();
+
 
 var app = builder.Build();
 

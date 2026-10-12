@@ -16,11 +16,17 @@ namespace BookCatalog.Infrastructure.Repositories
             _dbContext = dbContext;
         }
 
+        public Task<bool> ExistsAsync(Guid id)
+        {
+            return _dbContext.Books.AnyAsync(book => book.Id == id);
+        }
+
         public Task<Book?> GetByIdAsync(Guid id)
         {
             return _dbContext.Books
                 .AsNoTracking()
                 .Include(book => book.Author)
+                .Include(book => book.Loans.Where(loan => loan.ReturnedAt == null))
                 .SingleOrDefaultAsync(book => book.Id == id);
         }
 
@@ -28,7 +34,8 @@ namespace BookCatalog.Infrastructure.Repositories
         {
             IQueryable<Book> booksQuery = _dbContext.Books
                 .AsNoTracking()
-                .Include(book => book.Author);
+                .Include(book => book.Author)
+                .Include(book => book.Loans.Where(loan => loan.ReturnedAt == null));
 
             if (!string.IsNullOrWhiteSpace(query.Search))
             {
@@ -54,7 +61,7 @@ namespace BookCatalog.Infrastructure.Repositories
             }
 
             var totalCount = await booksQuery.CountAsync();
-            var itemsToSkip = (query.PageNumber - 1) * query.PageSize;
+            var itemsToSkip = (long)(query.PageNumber - 1) * query.PageSize;
 
             if (totalCount == 0 || itemsToSkip >= totalCount)
             {
@@ -64,7 +71,7 @@ namespace BookCatalog.Infrastructure.Repositories
             var books = await booksQuery
                 .OrderBy(book => book.Title)
                 .ThenBy(book => book.Id)
-                .Skip(itemsToSkip)
+                .Skip((int)itemsToSkip)
                 .Take(query.PageSize)
                 .ToListAsync();
 

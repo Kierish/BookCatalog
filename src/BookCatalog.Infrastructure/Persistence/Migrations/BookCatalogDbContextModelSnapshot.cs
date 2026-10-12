@@ -120,6 +120,9 @@ namespace BookCatalog.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
+                    b.Property<int>("ActiveLoanCount")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -127,7 +130,24 @@ namespace BookCatalog.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Users_ActiveLoanCount", "\"ActiveLoanCount\" >= 0");
+                        });
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("0199c500-0000-7000-8000-000000000101"),
+                            ActiveLoanCount = 0,
+                            Name = "Alice Johnson"
+                        },
+                        new
+                        {
+                            Id = new Guid("0199c500-0000-7000-8000-000000000102"),
+                            ActiveLoanCount = 0,
+                            Name = "Bob Smith"
+                        });
                 });
 
             modelBuilder.Entity("BookCatalog.Domain.Entities.Book", b =>
