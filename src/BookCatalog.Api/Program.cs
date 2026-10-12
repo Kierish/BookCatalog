@@ -5,6 +5,7 @@ using BookCatalog.Api.Features.Books.GetBookById;
 using BookCatalog.Api.Features.Books.GetBooksList;
 using BookCatalog.Api.Features.Books.UpdateBook;
 using BookCatalog.Api.Features.Loans.BorrowBook;
+using BookCatalog.Api.Features.Loans.ReturnBook;
 using BookCatalog.Api.Filters;
 using BookCatalog.Domain.Interfaces;
 using BookCatalog.Infrastructure.Persistence;
@@ -51,6 +52,7 @@ builder.Services.AddScoped<CreateBookHandler>();
 builder.Services.AddScoped<UpdateBookHandler>();
 builder.Services.AddScoped<DeleteBookHandler>();
 builder.Services.AddScoped<BorrowBookHandler>();
+builder.Services.AddScoped<ReturnBookHandler>();
 
 var app = builder.Build();
 

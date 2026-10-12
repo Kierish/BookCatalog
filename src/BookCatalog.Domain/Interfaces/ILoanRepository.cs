@@ -6,5 +6,7 @@ namespace BookCatalog.Domain.Interfaces
     {
         Task<bool> HasActiveLoanAsync(Guid bookId);
         Task<bool> TryBorrowAsync(Loan loan);
+        Task<Loan?> GetByIdAsync(Guid id);
+        Task ReturnAsync(Loan loan, DateTimeOffset returnedAt);
     }
 }

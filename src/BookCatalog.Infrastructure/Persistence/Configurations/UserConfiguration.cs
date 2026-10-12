@@ -22,7 +22,7 @@ namespace BookCatalog.Infrastructure.Persistence.Configurations
             builder.HasData(
                 new User
                 {
-                    Id = Guid.Parse(" "),
+                    Id = Guid.Parse("0199c500-0000-7000-8000-000000000101"),
                     Name = "Alice Johnson"
                 },
                 new User

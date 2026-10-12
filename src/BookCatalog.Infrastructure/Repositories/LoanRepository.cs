@@ -24,6 +24,12 @@ namespace BookCatalog.Infrastructure.Repositories
                 loan.ReturnedAt == null);
         }
 
+        public Task<Loan?> GetByIdAsync(Guid id)
+        {
+            return _dbContext.Loans
+                .SingleOrDefaultAsync(loan => loan.Id == id);
+        }
+
         public async Task<bool> TryBorrowAsync(Loan loan)
         {
             _dbContext.Loans.Add(loan);
@@ -43,6 +49,12 @@ namespace BookCatalog.Infrastructure.Repositories
                 _dbContext.Entry(loan).State = EntityState.Detached;
                 return false;
             }
+        }
+
+        public async Task ReturnAsync(Loan loan, DateTimeOffset returnedAt)
+        {
+            loan.ReturnedAt = returnedAt;
+            await _dbContext.SaveChangesAsync();
         }
     }
 }
