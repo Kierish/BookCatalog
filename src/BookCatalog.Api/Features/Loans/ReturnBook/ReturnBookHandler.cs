@@ -46,9 +46,7 @@ namespace BookCatalog.Api.Features.Loans.ReturnBook
 
             var returnedAt = _timeProvider.GetUtcNow();
 
-            await _loanRepository.ReturnAsync(
-                loan,
-                returnedAt);
+            await _loanRepository.ReturnAsync(loan, returnedAt);
 
             _logger.LogInformation(
                 "Book returned. LoanId: {LoanId}, BookId: {BookId}, UserId: {UserId}",

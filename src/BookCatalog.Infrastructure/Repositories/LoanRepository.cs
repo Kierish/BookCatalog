@@ -79,6 +79,10 @@ namespace BookCatalog.Infrastructure.Repositories
 
         public async Task<bool> TryBorrowAsync(Loan loan)
         {
+            var user = await _dbContext.Users.FindAsync(loan.UserId)
+                ?? throw new InvalidOperationException($"User {loan.UserId} not found for loan {loan.Id}.");
+
+            user.ActiveLoanCount++;
             _dbContext.Loans.Add(loan);
 
             try
@@ -94,13 +98,20 @@ namespace BookCatalog.Infrastructure.Repositories
                 })
             {
                 _dbContext.Entry(loan).State = EntityState.Detached;
+                _dbContext.Entry(user).State = EntityState.Detached;
+
                 return false;
             }
         }
 
         public async Task ReturnAsync(Loan loan, DateTimeOffset returnedAt)
         {
+            var user = await _dbContext.Users.FindAsync(loan.UserId)
+                ?? throw new InvalidOperationException($"User {loan.UserId} not found for loan {loan.Id}.");
+
             loan.ReturnedAt = returnedAt;
+            user.ActiveLoanCount--;
+
             await _dbContext.SaveChangesAsync();
         }
     }
