@@ -6,5 +6,8 @@ namespace BookCatalog.Domain.Common.Results
 
         public static Error NotFound(string code, string message) =>
             new(code, message, ErrorType.NotFound);
+
+        public static Error Conflict(string code, string message) =>
+            new(code, message, ErrorType.Conflict);
     }
 }

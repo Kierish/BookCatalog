@@ -128,6 +128,18 @@ namespace BookCatalog.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("0199c500-0000-7000-8000-000000000101"),
+                            Name = "Alice Johnson"
+                        },
+                        new
+                        {
+                            Id = new Guid("0199c500-0000-7000-8000-000000000102"),
+                            Name = "Bob Smith"
+                        });
                 });
 
             modelBuilder.Entity("BookCatalog.Domain.Entities.Book", b =>

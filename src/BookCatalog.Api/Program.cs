@@ -4,6 +4,7 @@ using BookCatalog.Api.Features.Books.DeleteBook;
 using BookCatalog.Api.Features.Books.GetBookById;
 using BookCatalog.Api.Features.Books.GetBooksList;
 using BookCatalog.Api.Features.Books.UpdateBook;
+using BookCatalog.Api.Features.Loans.BorrowBook;
 using BookCatalog.Api.Filters;
 using BookCatalog.Domain.Interfaces;
 using BookCatalog.Infrastructure.Persistence;
@@ -39,13 +40,17 @@ builder.Services.AddDbContext<BookCatalogDbContext>(options =>
     options.UseNpgsql(connectionString));
 
 // Dependency Injection
+builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<IAuthorRepository, AuthorRepository>();
 builder.Services.AddScoped<IBookRepository, BookRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ILoanRepository, LoanRepository>();
 builder.Services.AddScoped<GetBookByIdHandler>();
 builder.Services.AddScoped<GetBooksListHandler>();
 builder.Services.AddScoped<CreateBookHandler>();
 builder.Services.AddScoped<UpdateBookHandler>();
 builder.Services.AddScoped<DeleteBookHandler>();
+builder.Services.AddScoped<BorrowBookHandler>();
 
 var app = builder.Build();
 

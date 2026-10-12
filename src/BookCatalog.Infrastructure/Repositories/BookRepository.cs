@@ -16,6 +16,11 @@ namespace BookCatalog.Infrastructure.Repositories
             _dbContext = dbContext;
         }
 
+        public Task<bool> ExistsAsync(Guid id)
+        {
+            return _dbContext.Books.AnyAsync(book => book.Id == id);
+        }
+
         public Task<Book?> GetByIdAsync(Guid id)
         {
             return _dbContext.Books

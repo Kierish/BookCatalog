@@ -6,6 +6,7 @@ namespace BookCatalog.Domain.Interfaces
 {
     public interface IBookRepository
     {
+        Task<bool> ExistsAsync(Guid id);
         Task<Book?> GetByIdAsync(Guid id);
         Task<PagedResult<Book>> GetPagedAsync(BookQuery query);
         Task<Book> AddAsync(Book book);

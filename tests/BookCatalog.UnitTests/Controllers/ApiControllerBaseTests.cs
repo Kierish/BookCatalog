@@ -26,6 +26,24 @@ namespace BookCatalog.UnitTests.Controllers
             problemDetails.Detail.ShouldBe("Book was not found.");
         }
 
+        [Fact]
+        public void HandleFailure_WhenErrorIsConflict_ShouldReturnConflictProblemDetails()
+        {
+            var controller = new TestController();
+            var result = Result.Failure(
+                Error.Conflict(
+                    "Loans.BookAlreadyBorrowed",
+                    "Book is already borrowed."));
+
+            var response = controller.Handle(result);
+
+            response.StatusCode.ShouldBe(StatusCodes.Status409Conflict);
+
+            var problemDetails = response.Value.ShouldBeOfType<ProblemDetails>();
+            problemDetails.Title.ShouldBe("Loans.BookAlreadyBorrowed");
+            problemDetails.Detail.ShouldBe("Book is already borrowed.");
+        }
+
         private sealed class TestController : ApiControllerBase
         {
             public ObjectResult Handle(Result result)
