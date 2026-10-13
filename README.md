@@ -1,60 +1,79 @@
 # Book Catalog Platform API
 
-REST API for managing a book catalog platform built with .NET 10 (C# 14).
+REST API for managing a book catalog and lending workflow, built with .NET 10 (C# 14), EF Core, and PostgreSQL.
 
 ## Architecture
 
 The solution uses **Layered Architecture**, with feature-based organization inside the API project:
 
-- **`BookCatalog.Domain`**: Core domain entities (`Book`), common domain models (`PagedResult<T>`), and repository interfaces (`IBookRepository`). Zero external dependencies.
-- **`BookCatalog.Infrastructure`**: Persistence implementations (`InMemoryBookRepository` backed by thread-safe `ConcurrentDictionary`).
-- **`BookCatalog.Api`**: REST endpoints, feature handlers (`CreateBook`, `GetBooksList`, etc.), request models, FluentValidation rules, and centralized exception handling.
+- **`BookCatalog.Domain`**: Domain entities (`Book`, `Author`, `User`, and `Loan`), shared models, results, and repository interfaces. Zero external dependencies.
+- **`BookCatalog.Infrastructure`**: EF Core persistence, PostgreSQL repositories, entity configurations, and migrations.
+- **`BookCatalog.Api`**: REST endpoints, feature handlers, request models, validation, error handling, and dependency registration.
 
-The separate **`BookCatalog.UnitTests`** project uses xUnit, NSubstitute, and Shouldly to test business logic, domain models, mappings, validators, and error sanitization.
+The separate **`BookCatalog.UnitTests`** project uses xUnit, NSubstitute, and Shouldly to test business logic without accessing a real database.
 
-Data is stored in memory and is lost on restart.
+Data is stored in PostgreSQL and persists across application and container restarts.
 
 ## API Endpoints
 
 | Method | Endpoint | Description | Status Codes |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/api/books` | Create a new book | `201 Created`, `400 Bad Request` |
-| `GET` | `/api/books` | Retrieve paginated & filtered books | `200 OK`, `400 Bad Request` |
-| `GET` | `/api/books/{id}` | Retrieve book by ID | `200 OK`, `400 Bad Request`, `404 Not Found` |
-| `PUT` | `/api/books/{id}` | Update existing book | `204 No Content`, `400 Bad Request`, `404 Not Found` |
-| `DELETE` | `/api/books/{id}` | Remove book from catalog | `204 No Content`, `400 Bad Request`, `404 Not Found` |
+| `POST` | `/api/books` | Create a book | `201`, `400`, `404` |
+| `GET` | `/api/books` | Retrieve paginated and filtered books | `200`, `400` |
+| `GET` | `/api/books/{id}` | Retrieve a book by ID | `200`, `400`, `404` |
+| `PUT` | `/api/books/{id}` | Update a book | `204`, `400`, `404` |
+| `DELETE` | `/api/books/{id}` | Delete a book | `204`, `400`, `404` |
+| `POST` | `/api/loans` | Borrow an available book | `201`, `400`, `404`, `409` |
+| `POST` | `/api/loans/{loanId}/return` | Return a borrowed book | `204`, `400`, `404`, `409` |
+| `GET` | `/api/loans` | Retrieve paginated borrowing history | `200`, `400` |
 
-Invalid book ID formats return `400 Bad Request`.
+### Book Query Parameters
 
-### Query Parameters for `GET /api/books`
+- `search`: Case-insensitive title and author name search.
+- `authorId`: Exact author filter.
+- `publicationYear`: Exact publication year filter.
+- `pageNumber`: Page number (default: `1`).
+- `pageSize`: Items per page (default: `10`, maximum: `50`).
 
-- `title` *(string, optional)*: Case-insensitive substring filter.
-- `author` *(string, optional)*: Case-insensitive substring filter.
-- `publicationYear` *(int, optional)*: Exact publication year filter (`1` to current year).
-- `pageNumber` *(int, optional, default: 1)*: Page number (`>= 1`).
-- `pageSize` *(int, optional, default: 10)*: Number of items per page (`1` to `50`).
+### Loan History Query Parameters
 
-List responses include `items`, `totalCount`, `pageNumber`, `pageSize`, `totalPages`, `hasPreviousPage`, and `hasNextPage`. `totalCount` is the number of books matching the filters before pagination.
+- `bookId`: Exact book filter.
+- `userId`: Exact user filter.
+- `pageNumber`: Page number (default: `1`).
+- `pageSize`: Items per page (default: `10`, maximum: `50`).
+
+Paginated responses include `items`, `totalCount`, `pageNumber`, `pageSize`, `totalPages`, `hasPreviousPage`, and `hasNextPage`.
 
 ## Getting Started
 
 ### Prerequisites
 
-- [.NET 10 SDK](https://dotnet.microsoft.com/download)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 
-### Run the Application
+### Run with Docker Compose
+
+Copy `.env.example` to `.env` and set `POSTGRES_PASSWORD`, then run:
 
 ```bash
-dotnet restore
-dotnet run --project src/BookCatalog.Api --launch-profile https
+docker compose up --build
+```
+
+This starts PostgreSQL, applies EF Core migrations, and starts the API. Database data is persisted in a Docker volume.
+
+Swagger UI is available at [http://localhost:8080/swagger](http://localhost:8080/swagger).
+
+To stop the application:
+
+```bash
+docker compose down
 ```
 
 ### Run Tests
 
+Requires the [.NET 10 SDK](https://dotnet.microsoft.com/download).
+
 ```bash
-dotnet test
+dotnet test BookCatalog.slnx
 ```
 
-### API Documentation
-
-Once running, navigate to [Swagger UI](https://localhost:7145/swagger).
+Additional design decisions and trade-offs are documented in [DESIGN_NOTE.md](DESIGN_NOTE.md).

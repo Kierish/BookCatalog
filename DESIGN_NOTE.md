@@ -1,4 +1,4 @@
-# Design Note — Book Catalog Platform (Weeks 1–2)
+# Design Note — Book Catalog Platform (Weeks 1–3)
 
 A living document tracking architectural decisions, trade-offs, and learnings.
 
@@ -8,8 +8,9 @@ A living document tracking architectural decisions, trade-offs, and learnings.
 
 - **Week 1:** A CRUD API with separate request/response models, FluentValidation, Swagger, and structured logging. One project contained feature handlers directly dependent on `InMemoryBookStore`.
 - **Week 2:** Separate projects, an `IBookRepository` abstraction, shared mapping methods, filtering and pagination, centralized exception handling, and unit tests.
+- **Week 3:** PostgreSQL persistence with EF Core migrations and relational entities, database-side querying, transactional lending, borrowing history, and Docker Compose orchestration.
 
-Data remains in memory until the database migration in Week 3. Endpoint details and run instructions are in [README.md](README.md).
+Data is now stored in PostgreSQL and persists across application and container restarts.
 
 ---
 
@@ -19,14 +20,19 @@ The solution uses **Layered Architecture**, with feature-based organization insi
 
 ```text
 src/
-├── BookCatalog.Domain/          # Book, PagedResult<T>, IBookRepository
-├── BookCatalog.Infrastructure/  # InMemoryBookRepository
+├── BookCatalog.Domain/          # Entities, shared models, results, queries, repository interfaces
+├── BookCatalog.Infrastructure/  # EF Core persistence and PostgreSQL repositories
+│   ├── Persistence/             # DbContext, entity configurations, migrations
+│   └── Repositories/            # Book, author, user, and loan repositories
 └── BookCatalog.Api/             # HTTP endpoints and application setup
-    ├── Features/Books/          # Requests, validators, handlers, mappings
+    ├── Features/Books/          # Catalog requests, validators, handlers, mappings
+    ├── Features/Loans/          # Borrowing, returns, and history
     ├── Filters/                 # ValidationFilter
     └── Exceptions/              # GlobalExceptionHandler
 tests/
 └── BookCatalog.UnitTests/       # Tests independent of external services
+Dockerfile                       # API and migration images
+docker-compose.yml               # PostgreSQL, migrations, and API orchestration
 ```
 
 - **Decision:** Keep `Domain` independent; `Infrastructure` depends on `Domain`, while `Api` references both and registers implementations.
@@ -90,3 +96,58 @@ tests/
 1. **ISBN Validation:** Validate format and check digits instead of only limiting the length of non-blank values.
 2. **Continuous Integration:** Automatically build and run unit tests for pull requests.
 3. **Integration Tests:** In a later stage, verify HTTP routing, validation, exception handling, and interaction with a real database.
+
+---
+
+## 5. Week 3
+
+### Data Model
+
+- **Author → Books:** One author has many books, while each book has one required author. Keeping authors separate avoids repeating names in every book row and gives the relationship a database-enforced foreign key.
+- **Book → Loans:** One book has many loans over time. `ReturnedAt = null` identifies the active loan, while completed rows remain available as borrowing history.
+- **User → Loans:** One user can borrow many books over time. `Loan` connects a user and a book while storing relationship-specific data such as `BorrowedAt` and `ReturnedAt`.
+- **Loan identity:** `Loan` has its own primary key because the same user can borrow the same book multiple times. Using only `BookId` and `UserId` as a composite key would prevent repeated loans and would not identify one borrowing event independently.
+- **Active loan count:** `User.ActiveLoanCount` is a denormalized counter updated in the same transaction as the loan. It provides a multi-step transactional operation and avoids recounting the user's borrowing history when the current count is needed.
+
+Database constraints protect invariants independently of application validation: publication years cannot be less than one, active-loan counts cannot be negative, return time cannot precede borrow time, foreign keys prevent orphaned relations, and a partial unique index allows only one active loan per book.
+
+### Dockerfile Structure
+
+| Line | Purpose |
+| :--- | :--- |
+| `FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build` | Starts a build stage with the full .NET SDK. |
+| `WORKDIR /src` | Sets the working directory for restore and publish commands. |
+| `COPY` project files, then `dotnet restore` | Restores dependencies in a cacheable layer that changes only when project files change. |
+| `COPY . .` | Copies the remaining source code into the build stage. |
+| `dotnet publish ... --no-restore` | Compiles the API in Release mode and places deployable files in `/app/publish`. |
+| `FROM build AS migration` | Starts a migration stage from the SDK build stage; Compose builds it as a separate image. |
+| `dotnet tool install ... dotnet-ef` | Installs the EF Core CLI version used by the project. |
+| Migration `ENTRYPOINT` | Applies committed migrations and exits; Compose starts the API only after a successful exit. |
+| `FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final` | Starts a clean runtime-only stage without the SDK or source code. |
+| `ENV ASPNETCORE_HTTP_PORTS=8080` and `EXPOSE 8080` | Configures Kestrel's container port and documents it for Docker. |
+| `COPY --from=build /app/publish .` | Copies only the published application into the final image. |
+| `USER $APP_UID` | Runs the API as the non-root user provided by the .NET image. |
+| API `ENTRYPOINT` | Starts `BookCatalog.Api.dll` when the API container runs. |
+
+### Database Choice: PostgreSQL
+
+I chose PostgreSQL as the relational storage backend for 4 specific reasons:
+
+1. **Lightweight for Docker:** The `postgres:17-alpine` image is relatively small, reducing download time and local setup overhead.
+2. **UUIDv7-Friendly Ordering:** PostgreSQL stores UUIDs in sortable binary form, allowing our `Guid.CreateVersion7()` keys to provide more sequential B-Tree insertions and reduce index fragmentation compared with random UUIDv4 values.
+3. **Partial Unique Indexes:** It supports conditional indexes (e.g., `UNIQUE(BookId) WHERE ReturnedAt IS NULL`), elegantly solving the double-borrowing race condition at the database level.
+4. **No Licensing Limits:** It is 100% free and open-source, with no artificial caps on database size or hardware usage.
+
+### Impact of Replacing In-Memory Storage
+
+- **Amount of change:** Significant. The change affected entities, repository contracts and implementations, DTOs, mappings, validators, handlers, dependency registration, controllers, and unit tests.
+- **Why so much changed:** Replacing the storage alone was relatively isolated. Most changes came from replacing the flat `Book` model with relationships between authors, books, users, and loans.
+- **Why Result was introduced:** The expanded domain added expected failures such as missing authors or users, unavailable books, and already returned loans. The Result pattern lets handlers return typed `NotFound` and `Conflict` errors without using exceptions for normal business outcomes. Unexpected database failures still reach `GlobalExceptionHandler` and return `500`.
+- **What Week 2 got right:** Handlers already depended on repository interfaces, and unit tests used substitutes. EF Core remained inside `Infrastructure`, and the tests still did not require a real database.
+- **What Week 2 revealed:** The abstraction separated storage from business logic, but its contracts were designed around a simple in-memory `Book` model. It handled the persistence replacement well, but it could not prevent a real domain expansion from affecting multiple layers.
+
+### Expected Performance Bottleneck
+
+- **First bottleneck:** `GET /api/books`.
+- **Why:** It performs a count and a page query, searches titles and author names with `ILIKE '%value%'`, and uses offset pagination. Leading-wildcard searches may scan many rows, while deep offsets require PostgreSQL to pass over earlier results.
+- **Possible improvements:** PostgreSQL trigram indexes, keyset pagination and response projection with `Select`.
