@@ -13,6 +13,7 @@ using BookCatalog.Infrastructure.Persistence;
 using BookCatalog.Infrastructure.Repositories;
 using FluentValidation;
 using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -40,6 +41,10 @@ var connectionString = builder.Configuration
 
 builder.Services.AddDbContext<BookCatalogDbContext>(options =>
     options.UseNpgsql(connectionString));
+
+builder.Services
+    .AddHealthChecks()
+    .AddDbContextCheck<BookCatalogDbContext>(name: "postgresql", tags: ["ready"]);
 
 // Dependency Injection
 
@@ -83,6 +88,12 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHealthChecks("/health/live",
+    new HealthCheckOptions { Predicate = _ => false });
+
+app.MapHealthChecks("/health/ready",
+    new HealthCheckOptions { Predicate = healthCheck => healthCheck.Tags.Contains("ready") });
 
 app.Run();
 
