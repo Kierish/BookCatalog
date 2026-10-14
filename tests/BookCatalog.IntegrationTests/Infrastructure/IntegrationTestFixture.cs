@@ -68,6 +68,22 @@ namespace BookCatalog.IntegrationTests.Infrastructure
             await _respawner.ResetAsync(_databaseConnection);
         }
 
+        public async Task ExecuteDbContextAsync(Func<BookCatalogDbContext, Task> action)
+        {
+            if (_application is null)
+            {
+                throw new InvalidOperationException(
+                    "The test application is not initialized.");
+            }
+
+            await using var scope = _application.Services.CreateAsyncScope();
+
+            var dbContext = scope.ServiceProvider
+                .GetRequiredService<BookCatalogDbContext>();
+
+            await action(dbContext);
+        }
+
         private async Task ApplyMigrationsAsync()
         {
             if (_application is null)

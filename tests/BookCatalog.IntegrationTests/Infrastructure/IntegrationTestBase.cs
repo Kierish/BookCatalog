@@ -1,3 +1,5 @@
+using BookCatalog.Infrastructure.Persistence;
+
 namespace BookCatalog.IntegrationTests.Infrastructure
 {
     public abstract class IntegrationTestBase : IAsyncLifetime
@@ -10,6 +12,11 @@ namespace BookCatalog.IntegrationTests.Infrastructure
         }
 
         protected HttpClient Client => _fixture.Client;
+
+        protected Task ExecuteDbContextAsync(Func<BookCatalogDbContext, Task> action)
+        {
+            return _fixture.ExecuteDbContextAsync(action);
+        }
 
         public Task InitializeAsync()
         {
