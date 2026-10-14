@@ -5,6 +5,7 @@
     <Project Path="src/BookCatalog.Infrastructure/BookCatalog.Infrastructure.csproj" Id="adfdfcff-59bb-4cdc-a17a-c7d1871dc876" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/BookCatalog.IntegrationTests/BookCatalog.IntegrationTests.csproj" />
     <Project Path="tests/BookCatalog.UnitTests/BookCatalog.UnitTests.csproj" Id="2988cb41-e4de-4b22-a3b1-30b027b22116" />
   </Folder>
 </Solution>
