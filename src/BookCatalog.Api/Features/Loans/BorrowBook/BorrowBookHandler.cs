@@ -27,9 +27,10 @@ namespace BookCatalog.Api.Features.Loans.BorrowBook
         }
 
         public async Task<Result<LoanResponse>> HandleAsync(
-            BorrowBookRequest request)
+            BorrowBookRequest request,
+            CancellationToken cancellationToken = default)
         {
-            if (!await _bookRepository.ExistsAsync(request.BookId))
+            if (!await _bookRepository.ExistsAsync(request.BookId, cancellationToken))
             {
                 _logger.LogWarning(
                     "Book borrowing rejected. BookId: {BookId} was not found.",
@@ -39,7 +40,7 @@ namespace BookCatalog.Api.Features.Loans.BorrowBook
                     BookErrors.NotFound(request.BookId));
             }
 
-            if (!await _userRepository.ExistsAsync(request.UserId))
+            if (!await _userRepository.ExistsAsync(request.UserId, cancellationToken))
             {
                 _logger.LogWarning(
                     "Book borrowing rejected. UserId: {UserId} was not found.",
@@ -49,7 +50,7 @@ namespace BookCatalog.Api.Features.Loans.BorrowBook
                     UserErrors.NotFound(request.UserId));
             }
 
-            if (await _loanRepository.HasActiveLoanAsync(request.BookId))
+            if (await _loanRepository.HasActiveLoanAsync(request.BookId, cancellationToken))
             {
                 _logger.LogInformation(
                     "Book borrowing rejected. BookId: {BookId} is already borrowed.",
@@ -61,7 +62,7 @@ namespace BookCatalog.Api.Features.Loans.BorrowBook
 
             var loan = request.ToEntity(_timeProvider.GetUtcNow());
 
-            if (!await _loanRepository.TryBorrowAsync(loan))
+            if (!await _loanRepository.TryBorrowAsync(loan, cancellationToken))
             {
                 _logger.LogWarning(
                     "Book borrowing rejected due to a concurrent request. BookId: {BookId} is already borrowed.",

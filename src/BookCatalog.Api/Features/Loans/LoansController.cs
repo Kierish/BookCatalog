@@ -16,9 +16,10 @@ namespace BookCatalog.Api.Features.Loans
         [ProducesResponseType(typeof(HttpValidationProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<PagedResult<LoanHistoryResponse>>> GetHistory(
             [FromQuery] GetLoanHistoryRequest request,
-            [FromServices] GetLoanHistoryHandler handler)
+            [FromServices] GetLoanHistoryHandler handler,
+            CancellationToken cancellationToken)
         {
-            var history = await handler.HandleAsync(request);
+            var history = await handler.HandleAsync(request, cancellationToken);
             return Ok(history);
         }
 
@@ -29,9 +30,10 @@ namespace BookCatalog.Api.Features.Loans
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
         public async Task<ActionResult<LoanResponse>> Borrow(
             [FromBody] BorrowBookRequest request,
-            [FromServices] BorrowBookHandler handler)
+            [FromServices] BorrowBookHandler handler,
+            CancellationToken cancellationToken)
         {
-            var result = await handler.HandleAsync(request);
+            var result = await handler.HandleAsync(request, cancellationToken);
 
             if (result.IsFailure)
             {
@@ -50,9 +52,10 @@ namespace BookCatalog.Api.Features.Loans
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
         public async Task<IActionResult> Return(
             Guid loanId,
-            [FromServices] ReturnBookHandler handler)
+            [FromServices] ReturnBookHandler handler,
+            CancellationToken cancellationToken)
         {
-            var result = await handler.HandleAsync(loanId);
+            var result = await handler.HandleAsync(loanId, cancellationToken);
 
             if (result.IsFailure)
             {

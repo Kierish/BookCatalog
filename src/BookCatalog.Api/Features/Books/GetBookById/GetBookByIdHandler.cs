@@ -15,9 +15,11 @@ namespace BookCatalog.Api.Features.Books.GetBookById
             _logger = logger;
         }
 
-        public async Task<Result<BookResponse>> HandleAsync(Guid id)
+        public async Task<Result<BookResponse>> HandleAsync(
+            Guid id,
+            CancellationToken cancellationToken = default)
         {
-            var book = await _bookRepository.GetByIdAsync(id);
+            var book = await _bookRepository.GetByIdAsync(id, cancellationToken);
 
             if (book is null)
             {

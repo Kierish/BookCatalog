@@ -20,9 +20,11 @@ namespace BookCatalog.Api.Features.Loans.ReturnBook
             _logger = logger;
         }
 
-        public async Task<Result> HandleAsync(Guid loanId)
+        public async Task<Result> HandleAsync(
+            Guid loanId,
+            CancellationToken cancellationToken = default)
         {
-            var loan = await _loanRepository.GetByIdAsync(loanId);
+            var loan = await _loanRepository.GetByIdAsync(loanId, cancellationToken);
 
             if (loan is null)
             {
@@ -46,7 +48,7 @@ namespace BookCatalog.Api.Features.Loans.ReturnBook
 
             var returnedAt = _timeProvider.GetUtcNow();
 
-            await _loanRepository.ReturnAsync(loan, returnedAt);
+            await _loanRepository.ReturnAsync(loan, returnedAt, cancellationToken);
 
             _logger.LogInformation(
                 "Book returned. LoanId: {LoanId}, BookId: {BookId}, UserId: {UserId}",

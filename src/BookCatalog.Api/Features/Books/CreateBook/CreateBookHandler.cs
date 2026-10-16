@@ -20,9 +20,11 @@ namespace BookCatalog.Api.Features.Books.CreateBook
             _logger = logger;
         }
 
-        public async Task<Result<BookResponse>> HandleAsync(CreateBookRequest request)
+        public async Task<Result<BookResponse>> HandleAsync(
+            CreateBookRequest request,
+            CancellationToken cancellationToken = default)
         {
-            var authorExists = await _authorRepository.ExistsAsync(request.AuthorId);
+            var authorExists = await _authorRepository.ExistsAsync(request.AuthorId, cancellationToken);
 
             if (!authorExists)
             {
@@ -35,7 +37,7 @@ namespace BookCatalog.Api.Features.Books.CreateBook
 
             var book = request.ToEntity();
 
-            var createdBook = await _bookRepository.AddAsync(book);
+            var createdBook = await _bookRepository.AddAsync(book, cancellationToken);
 
             _logger.LogInformation(
                 "Book created. BookId: {BookId}, AuthorId: {AuthorId}", createdBook.Id, createdBook.AuthorId);

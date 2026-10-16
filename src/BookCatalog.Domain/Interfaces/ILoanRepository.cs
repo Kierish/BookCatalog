@@ -6,10 +6,10 @@ namespace BookCatalog.Domain.Interfaces
 {
     public interface ILoanRepository
     {
-        Task<bool> HasActiveLoanAsync(Guid bookId);
-        Task<bool> TryBorrowAsync(Loan loan);
-        Task<Loan?> GetByIdAsync(Guid id);
-        Task ReturnAsync(Loan loan, DateTimeOffset returnedAt);
-        Task<PagedResult<Loan>> GetPagedAsync(LoanQuery query);
+        Task<bool> HasActiveLoanAsync(Guid bookId, CancellationToken cancellationToken = default);
+        Task<bool> TryBorrowAsync(Loan loan, CancellationToken cancellationToken = default);
+        Task<Loan?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+        Task ReturnAsync(Loan loan, DateTimeOffset returnedAt, CancellationToken cancellationToken = default);
+        Task<PagedResult<Loan>> GetPagedAsync(LoanQuery query, CancellationToken cancellationToken = default);
     }
 }

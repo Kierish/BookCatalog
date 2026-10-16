@@ -14,7 +14,8 @@ namespace BookCatalog.Api.Features.Loans.GetLoanHistory
         }
 
         public async Task<PagedResult<LoanHistoryResponse>> HandleAsync(
-            GetLoanHistoryRequest request)
+            GetLoanHistoryRequest request,
+            CancellationToken cancellationToken = default)
         {
             var query = new LoanQuery(
                 request.BookId,
@@ -22,7 +23,7 @@ namespace BookCatalog.Api.Features.Loans.GetLoanHistory
                 request.PageNumber,
                 request.PageSize);
 
-            var pagedLoans = await _loanRepository.GetPagedAsync(query);
+            var pagedLoans = await _loanRepository.GetPagedAsync(query, cancellationToken);
 
             return pagedLoans.Map(loan => loan.ToHistoryResponse());
         }
