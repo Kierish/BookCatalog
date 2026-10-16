@@ -16,21 +16,23 @@ namespace BookCatalog.Infrastructure.Repositories
             _dbContext = dbContext;
         }
 
-        public Task<bool> ExistsAsync(Guid id)
+        public Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            return _dbContext.Books.AnyAsync(book => book.Id == id);
+            return _dbContext.Books.AnyAsync(book => book.Id == id, cancellationToken);
         }
 
-        public Task<Book?> GetByIdAsync(Guid id)
+        public Task<Book?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
             return _dbContext.Books
                 .AsNoTracking()
                 .Include(book => book.Author)
                 .Include(book => book.Loans.Where(loan => loan.ReturnedAt == null))
-                .SingleOrDefaultAsync(book => book.Id == id);
+                .SingleOrDefaultAsync(book => book.Id == id, cancellationToken);
         }
 
-        public async Task<PagedResult<Book>> GetPagedAsync(BookQuery query)
+        public async Task<PagedResult<Book>> GetPagedAsync(
+            BookQuery query,
+            CancellationToken cancellationToken = default)
         {
             IQueryable<Book> booksQuery = _dbContext.Books
                 .AsNoTracking()
@@ -60,7 +62,7 @@ namespace BookCatalog.Infrastructure.Repositories
                     book.PublicationYear == query.PublicationYear.Value);
             }
 
-            var totalCount = await booksQuery.CountAsync();
+            var totalCount = await booksQuery.CountAsync(cancellationToken);
             var itemsToSkip = (long)(query.PageNumber - 1) * query.PageSize;
 
             if (totalCount == 0 || itemsToSkip >= totalCount)
@@ -73,7 +75,7 @@ namespace BookCatalog.Infrastructure.Repositories
                 .ThenBy(book => book.Id)
                 .Skip((int)itemsToSkip)
                 .Take(query.PageSize)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
             return new PagedResult<Book>(books, totalCount, query.PageNumber, query.PageSize);
         }
@@ -86,23 +88,23 @@ namespace BookCatalog.Infrastructure.Repositories
                 .Replace("_", "\\_");
         }
 
-        public async Task<Book> AddAsync(Book book)
+        public async Task<Book> AddAsync(Book book, CancellationToken cancellationToken = default)
         {
             _dbContext.Books.Add(book);
 
-            await _dbContext.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync(cancellationToken);
 
             await _dbContext.Entry(book)
                 .Reference(book => book.Author)
-                .LoadAsync();
+                .LoadAsync(cancellationToken);
 
             return book;
         }
 
-        public async Task<bool> UpdateAsync(Book book)
+        public async Task<bool> UpdateAsync(Book book, CancellationToken cancellationToken = default)
         {
             var existingBook = await _dbContext.Books
-                .SingleOrDefaultAsync(existingBook => existingBook.Id == book.Id);
+                .SingleOrDefaultAsync(existingBook => existingBook.Id == book.Id, cancellationToken);
 
             if (existingBook is null)
             {
@@ -114,14 +116,14 @@ namespace BookCatalog.Infrastructure.Repositories
             existingBook.Isbn = book.Isbn;
             existingBook.PublicationYear = book.PublicationYear;
 
-            await _dbContext.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync(cancellationToken);
             return true;
         }
 
-        public async Task<bool> DeleteAsync(Guid id)
+        public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
         {
             var book = await _dbContext.Books
-                .SingleOrDefaultAsync(book => book.Id == id);
+                .SingleOrDefaultAsync(book => book.Id == id, cancellationToken);
 
             if (book is null)
             {
@@ -129,7 +131,7 @@ namespace BookCatalog.Infrastructure.Repositories
             }
 
             _dbContext.Books.Remove(book);
-            await _dbContext.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync(cancellationToken);
             return true;
         }
     }

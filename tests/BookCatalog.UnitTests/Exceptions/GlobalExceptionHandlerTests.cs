@@ -82,5 +82,26 @@ namespace BookCatalog.UnitTests.Exceptions
             using var response = JsonDocument.Parse(responseJson);
             response.RootElement.TryGetProperty("stackTrace", out _).ShouldBeFalse();
         }
+
+        [Fact]
+        public async Task TryHandleAsync_WhenRequestIsCanceled_ShouldReturnClientClosedRequest()
+        {
+            using var cancellationTokenSource = new CancellationTokenSource();
+            cancellationTokenSource.Cancel();
+
+            var httpContext = new DefaultHttpContext
+            {
+                RequestAborted = cancellationTokenSource.Token
+            };
+
+            var handled = await _handler.TryHandleAsync(
+                httpContext,
+                new OperationCanceledException(),
+                CancellationToken.None);
+
+            handled.ShouldBeTrue();
+            httpContext.Response.StatusCode
+                .ShouldBe(StatusCodes.Status499ClientClosedRequest);
+        }
     }
 }

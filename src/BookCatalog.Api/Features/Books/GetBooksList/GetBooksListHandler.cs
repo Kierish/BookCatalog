@@ -13,7 +13,9 @@ namespace BookCatalog.Api.Features.Books.GetBooksList
             _bookRepository = bookRepository;
         }
 
-        public async Task<PagedResult<BookResponse>> HandleAsync(GetBooksListRequest request)
+        public async Task<PagedResult<BookResponse>> HandleAsync(
+            GetBooksListRequest request,
+            CancellationToken cancellationToken = default)
         {
             var query = new BookQuery(
                 request.Search,
@@ -22,7 +24,7 @@ namespace BookCatalog.Api.Features.Books.GetBooksList
                 request.PageNumber,
                 request.PageSize);
 
-            var pagedBooks = await _bookRepository.GetPagedAsync(query);
+            var pagedBooks = await _bookRepository.GetPagedAsync(query, cancellationToken);
 
             return pagedBooks.Map(b => b.ToResponse());
         }

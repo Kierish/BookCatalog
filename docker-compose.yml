@@ -38,6 +38,7 @@ services:
       ConnectionStrings__BookCatalog: Host=postgres;Port=5432;Database=bookcatalog;Username=postgres;Password=${POSTGRES_PASSWORD}
     ports:
       - "8080:8080"
+    stop_grace_period: 30s
     depends_on:
       migration:
         condition: service_completed_successfully

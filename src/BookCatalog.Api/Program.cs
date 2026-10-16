@@ -29,6 +29,12 @@ builder.Services.AddSerilog((services, loggerConfiguration) =>
         .ReadFrom.Services(services);
 });
 
+// Graceful Shutdown
+builder.Services.Configure<HostOptions>(options =>
+{
+    options.ShutdownTimeout = TimeSpan.FromSeconds(20);
+});
+
 // Controllers & Validation
 builder.Services.AddControllers(options =>
 {

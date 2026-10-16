@@ -20,9 +20,12 @@ namespace BookCatalog.Api.Features.Books.UpdateBook
             _logger = logger;
         }
 
-        public async Task<Result> HandleAsync(Guid id, UpdateBookRequest request)
+        public async Task<Result> HandleAsync(
+            Guid id,
+            UpdateBookRequest request,
+            CancellationToken cancellationToken = default)
         {
-            var authorExists = await _authorRepository.ExistsAsync(request.AuthorId);
+            var authorExists = await _authorRepository.ExistsAsync(request.AuthorId, cancellationToken);
 
             if (!authorExists)
             {
@@ -35,7 +38,7 @@ namespace BookCatalog.Api.Features.Books.UpdateBook
 
             var book = request.ToEntity(id);
 
-            var isUpdated = await _bookRepository.UpdateAsync(book);
+            var isUpdated = await _bookRepository.UpdateAsync(book, cancellationToken);
 
             if (!isUpdated)
             {

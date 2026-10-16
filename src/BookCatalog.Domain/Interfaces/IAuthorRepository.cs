@@ -2,6 +2,6 @@ namespace BookCatalog.Domain.Interfaces
 {
     public interface IAuthorRepository
     {
-        Task<bool> ExistsAsync(Guid id);
+        Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default);
     }
 }

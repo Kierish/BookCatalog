@@ -19,9 +19,10 @@ namespace BookCatalog.Api.Features.Books
         [ProducesResponseType(typeof(HttpValidationProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<BookResponse>> GetById(
             Guid id,
-            [FromServices] GetBookByIdHandler handler)
+            [FromServices] GetBookByIdHandler handler,
+            CancellationToken cancellationToken)
         {
-            var result = await handler.HandleAsync(id);
+            var result = await handler.HandleAsync(id, cancellationToken);
 
             if (result.IsFailure)
             {
@@ -36,9 +37,10 @@ namespace BookCatalog.Api.Features.Books
         [ProducesResponseType(typeof(HttpValidationProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<PagedResult<BookResponse>>> GetBooks(
             [FromQuery] GetBooksListRequest request,
-            [FromServices] GetBooksListHandler handler)
+            [FromServices] GetBooksListHandler handler,
+            CancellationToken cancellationToken)
         {
-            var pagedBooks = await handler.HandleAsync(request);
+            var pagedBooks = await handler.HandleAsync(request, cancellationToken);
             return Ok(pagedBooks);
         }
 
@@ -48,9 +50,10 @@ namespace BookCatalog.Api.Features.Books
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<ActionResult<BookResponse>> Create(
             [FromBody] CreateBookRequest request,
-            [FromServices] CreateBookHandler handler)
+            [FromServices] CreateBookHandler handler,
+            CancellationToken cancellationToken)
         {
-            var result = await handler.HandleAsync(request);
+            var result = await handler.HandleAsync(request, cancellationToken);
 
             if (result.IsFailure)
             {
@@ -70,9 +73,10 @@ namespace BookCatalog.Api.Features.Books
         public async Task<IActionResult> Update(
             Guid id,
             [FromBody] UpdateBookRequest request,
-            [FromServices] UpdateBookHandler handler)
+            [FromServices] UpdateBookHandler handler,
+            CancellationToken cancellationToken)
         {
-            var result = await handler.HandleAsync(id, request);
+            var result = await handler.HandleAsync(id, request, cancellationToken);
 
             if (result.IsFailure)
             {
@@ -88,9 +92,10 @@ namespace BookCatalog.Api.Features.Books
         [ProducesResponseType(typeof(HttpValidationProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Delete(
             Guid id,
-            [FromServices] DeleteBookHandler handler)
+            [FromServices] DeleteBookHandler handler,
+            CancellationToken cancellationToken)
         {
-            var result = await handler.HandleAsync(id);
+            var result = await handler.HandleAsync(id, cancellationToken);
 
             if (result.IsFailure)
             {

@@ -19,20 +19,23 @@ namespace BookCatalog.Infrastructure.Repositories
             _dbContext = dbContext;
         }
 
-        public Task<bool> HasActiveLoanAsync(Guid bookId)
+        public Task<bool> HasActiveLoanAsync(Guid bookId, CancellationToken cancellationToken = default)
         {
             return _dbContext.Loans.AnyAsync(loan =>
                 loan.BookId == bookId &&
-                loan.ReturnedAt == null);
+                loan.ReturnedAt == null,
+                cancellationToken);
         }
 
-        public Task<Loan?> GetByIdAsync(Guid id)
+        public Task<Loan?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
             return _dbContext.Loans
-                .SingleOrDefaultAsync(loan => loan.Id == id);
+                .SingleOrDefaultAsync(loan => loan.Id == id, cancellationToken);
         }
 
-        public async Task<PagedResult<Loan>> GetPagedAsync(LoanQuery query)
+        public async Task<PagedResult<Loan>> GetPagedAsync(
+            LoanQuery query,
+            CancellationToken cancellationToken = default)
         {
             IQueryable<Loan> loansQuery = _dbContext.Loans
                 .AsNoTracking()
@@ -51,7 +54,7 @@ namespace BookCatalog.Infrastructure.Repositories
                     loan => loan.UserId == query.UserId.Value);
             }
 
-            var totalCount = await loansQuery.CountAsync();
+            var totalCount = await loansQuery.CountAsync(cancellationToken);
             var itemsToSkip = (long)(query.PageNumber - 1) * query.PageSize;
 
             if (totalCount == 0 || itemsToSkip >= totalCount)
@@ -68,7 +71,7 @@ namespace BookCatalog.Infrastructure.Repositories
                 .ThenByDescending(loan => loan.Id)
                 .Skip((int)itemsToSkip)
                 .Take(query.PageSize)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
             return new PagedResult<Loan>(
                 loans,
@@ -77,9 +80,9 @@ namespace BookCatalog.Infrastructure.Repositories
                 query.PageSize);
         }
 
-        public async Task<bool> TryBorrowAsync(Loan loan)
+        public async Task<bool> TryBorrowAsync(Loan loan, CancellationToken cancellationToken = default)
         {
-            var user = await _dbContext.Users.FindAsync(loan.UserId)
+            var user = await _dbContext.Users.FindAsync([loan.UserId], cancellationToken)
                 ?? throw new InvalidOperationException($"User {loan.UserId} not found for loan {loan.Id}.");
 
             user.ActiveLoanCount++;
@@ -87,7 +90,7 @@ namespace BookCatalog.Infrastructure.Repositories
 
             try
             {
-                await _dbContext.SaveChangesAsync();
+                await _dbContext.SaveChangesAsync(cancellationToken);
                 return true;
             }
             catch (DbUpdateException exception)
@@ -104,15 +107,18 @@ namespace BookCatalog.Infrastructure.Repositories
             }
         }
 
-        public async Task ReturnAsync(Loan loan, DateTimeOffset returnedAt)
+        public async Task ReturnAsync(
+            Loan loan,
+            DateTimeOffset returnedAt,
+            CancellationToken cancellationToken = default)
         {
-            var user = await _dbContext.Users.FindAsync(loan.UserId)
+            var user = await _dbContext.Users.FindAsync([loan.UserId], cancellationToken)
                 ?? throw new InvalidOperationException($"User {loan.UserId} not found for loan {loan.Id}.");
 
             loan.ReturnedAt = returnedAt;
             user.ActiveLoanCount--;
 
-            await _dbContext.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync(cancellationToken);
         }
     }
 }

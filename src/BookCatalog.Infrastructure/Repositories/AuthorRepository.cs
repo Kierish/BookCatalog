@@ -13,9 +13,9 @@ namespace BookCatalog.Infrastructure.Repositories
             _dbContext = dbContext;
         }
 
-        public Task<bool> ExistsAsync(Guid id)
+        public Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            return _dbContext.Authors.AnyAsync(author => author.Id == id);
+            return _dbContext.Authors.AnyAsync(author => author.Id == id, cancellationToken);
         }
     }
 }

@@ -15,9 +15,11 @@ namespace BookCatalog.Api.Features.Books.DeleteBook
             _logger = logger;
         }
 
-        public async Task<Result> HandleAsync(Guid id)
+        public async Task<Result> HandleAsync(
+            Guid id,
+            CancellationToken cancellationToken = default)
         {
-            var isDeleted = await _bookRepository.DeleteAsync(id);
+            var isDeleted = await _bookRepository.DeleteAsync(id, cancellationToken);
             
             if (!isDeleted)
             {

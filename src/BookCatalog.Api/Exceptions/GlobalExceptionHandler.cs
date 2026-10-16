@@ -17,6 +17,22 @@ namespace BookCatalog.Api.Exceptions
             Exception exception,
             CancellationToken cancellationToken)
         {
+            if (exception is OperationCanceledException &&
+                httpContext.RequestAborted.IsCancellationRequested)
+            {
+                _logger.LogInformation(
+                    "Request canceled by the client. Method: {Method}, Path: {Path}",
+                    httpContext.Request.Method,
+                    httpContext.Request.Path);
+
+                if (!httpContext.Response.HasStarted)
+                {
+                    httpContext.Response.StatusCode = StatusCodes.Status499ClientClosedRequest;
+                }
+
+                return true;
+            }
+
             var traceId = System.Diagnostics.Activity.Current?.TraceId.ToString()
                 ?? httpContext.TraceIdentifier;
 
