@@ -59,7 +59,15 @@ builder.Services.AddDbContext<BookCatalogDbContext>(
             .GetRequiredService<IOptions<DatabaseOptions>>()
             .Value;
 
-        options.UseNpgsql(databaseOptions.BookCatalog);
+        options.UseNpgsql(
+            databaseOptions.BookCatalog,
+            npgsqlOptions =>
+            {
+                npgsqlOptions.EnableRetryOnFailure(
+                    maxRetryCount: 3,
+                    maxRetryDelay: TimeSpan.FromSeconds(2),
+                    errorCodesToAdd: null);
+            });
     });
 
 builder.Services
