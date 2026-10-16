@@ -43,6 +43,23 @@ namespace BookCatalog.UnitTests.Exceptions
         }
 
         [Fact]
+        public async Task TryHandleAsync_WhenActivityExists_ShouldReturnActivityTraceId()
+        {
+            using var activity = new System.Diagnostics.Activity("test-request").Start();
+            using var responseBody = new MemoryStream();
+            var httpContext = new DefaultHttpContext();
+            httpContext.Response.Body = responseBody;
+            var exception = new Exception("Unexpected failure");
+
+            await _handler.TryHandleAsync(httpContext, exception, CancellationToken.None);
+
+            responseBody.Position = 0;
+            using var response = await JsonDocument.ParseAsync(responseBody);
+            response.RootElement.GetProperty("traceId").GetString()
+                .ShouldBe(activity.TraceId.ToString());
+        }
+
+        [Fact]
         public async Task TryHandleAsync_WhenExceptionOccurs_ShouldNotExposeExceptionDetails()
         {
             using var responseBody = new MemoryStream();

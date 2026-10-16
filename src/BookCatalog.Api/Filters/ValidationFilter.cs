@@ -37,7 +37,7 @@ namespace BookCatalog.Api.Filters
 
                     if (!validationResult.IsValid)
                     {
-                        _logger.LogWarning(
+                        _logger.LogInformation(
                             "Validation failed for {RequestType}",
                             argumentType.Name);
 
