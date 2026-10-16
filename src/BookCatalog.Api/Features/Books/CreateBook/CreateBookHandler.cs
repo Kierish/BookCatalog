@@ -26,7 +26,7 @@ namespace BookCatalog.Api.Features.Books.CreateBook
 
             if (!authorExists)
             {
-                _logger.LogInformation(
+                _logger.LogWarning(
                     "Book creation rejected. AuthorId: {AuthorId} was not found.", request.AuthorId);
 
                 return Result<BookResponse>.Failure(

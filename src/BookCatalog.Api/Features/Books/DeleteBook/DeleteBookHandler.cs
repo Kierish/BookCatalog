@@ -21,7 +21,7 @@ namespace BookCatalog.Api.Features.Books.DeleteBook
             
             if (!isDeleted)
             {
-                _logger.LogWarning("Book deletion rejected. BookId: {BookId} was not found.", id);
+                _logger.LogInformation("Book deletion rejected. BookId: {BookId} was not found.", id);
 
                 return Result.Failure(
                     BookErrors.NotFound(id));

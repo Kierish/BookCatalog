@@ -26,7 +26,7 @@ namespace BookCatalog.Api.Features.Books.UpdateBook
 
             if (!authorExists)
             {
-                _logger.LogInformation(
+                _logger.LogWarning(
                     "Book update rejected. AuthorId: {AuthorId} was not found. BookId: {BookId}", request.AuthorId, id);
 
                 return Result.Failure(
@@ -39,7 +39,7 @@ namespace BookCatalog.Api.Features.Books.UpdateBook
 
             if (!isUpdated)
             {
-                _logger.LogWarning("Book update rejected. BookId: {BookId} was not found.", id);
+                _logger.LogInformation("Book update rejected. BookId: {BookId} was not found.", id);
 
                 return Result.Failure(
                     BookErrors.NotFound(id));

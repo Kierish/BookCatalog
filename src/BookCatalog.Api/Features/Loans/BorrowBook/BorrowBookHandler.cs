@@ -31,7 +31,7 @@ namespace BookCatalog.Api.Features.Loans.BorrowBook
         {
             if (!await _bookRepository.ExistsAsync(request.BookId))
             {
-                _logger.LogInformation(
+                _logger.LogWarning(
                     "Book borrowing rejected. BookId: {BookId} was not found.",
                     request.BookId);
 
@@ -41,7 +41,7 @@ namespace BookCatalog.Api.Features.Loans.BorrowBook
 
             if (!await _userRepository.ExistsAsync(request.UserId))
             {
-                _logger.LogInformation(
+                _logger.LogWarning(
                     "Book borrowing rejected. UserId: {UserId} was not found.",
                     request.UserId);
 
@@ -63,7 +63,7 @@ namespace BookCatalog.Api.Features.Loans.BorrowBook
 
             if (!await _loanRepository.TryBorrowAsync(loan))
             {
-                _logger.LogInformation(
+                _logger.LogWarning(
                     "Book borrowing rejected due to a concurrent request. BookId: {BookId} is already borrowed.",
                     request.BookId);
 

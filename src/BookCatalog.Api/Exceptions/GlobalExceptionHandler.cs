@@ -17,13 +17,14 @@ namespace BookCatalog.Api.Exceptions
             Exception exception,
             CancellationToken cancellationToken)
         {
+            var traceId = System.Diagnostics.Activity.Current?.TraceId.ToString()
+                ?? httpContext.TraceIdentifier;
+
             _logger.LogError(
                 exception,
-                "Unhandled exception while processing {Method} {Path}. TraceId: {TraceId}",
+                "Unhandled exception while processing {Method} {Path}",
                 httpContext.Request.Method,
-                httpContext.Request.Path,
-                httpContext.TraceIdentifier
-            );
+                httpContext.Request.Path);
 
             var problemDetails = new ProblemDetails
             {
@@ -33,7 +34,7 @@ namespace BookCatalog.Api.Exceptions
                 Instance = httpContext.Request.Path
             };
 
-            problemDetails.Extensions["traceId"] = httpContext.TraceIdentifier;
+            problemDetails.Extensions["traceId"] = traceId;
 
             httpContext.Response.StatusCode = problemDetails.Status.Value;
 

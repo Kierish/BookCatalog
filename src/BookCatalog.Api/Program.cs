@@ -17,8 +17,17 @@ using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Logging
+builder.Services.AddSerilog((services, loggerConfiguration) =>
+{
+    loggerConfiguration
+        .ReadFrom.Configuration(builder.Configuration)
+        .ReadFrom.Services(services);
+});
 
 // Controllers & Validation
 builder.Services.AddControllers(options =>
@@ -84,6 +93,8 @@ builder.Services.AddScoped<GetLoanHistoryHandler>();
 var app = builder.Build();
 
 // HTTP request pipeline
+
+app.UseSerilogRequestLogging();
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
