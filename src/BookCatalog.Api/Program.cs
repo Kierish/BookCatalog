@@ -1,3 +1,4 @@
+using BookCatalog.Api.Configuration;
 using BookCatalog.Api.Exceptions;
 using BookCatalog.Api.Features.Books.CreateBook;
 using BookCatalog.Api.Features.Books.DeleteBook;
@@ -15,13 +16,14 @@ using FluentValidation;
 using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Controllers & Validation
 builder.Services.AddControllers(options =>
 {
-    options.Filters.Add<ValidationFilter>(); 
+    options.Filters.Add<ValidationFilter>();
 });
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
@@ -34,13 +36,22 @@ builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 // Database
-var connectionString = builder.Configuration
-    .GetConnectionString("BookCatalog")
-    ?? throw new InvalidOperationException(
-        "Connection string 'BookCatalog' is not configured.");
+builder.Services
+    .AddOptions<DatabaseOptions>()
+    .BindConfiguration(DatabaseOptions.SectionName)
+    .ValidateOnStart();
 
-builder.Services.AddDbContext<BookCatalogDbContext>(options =>
-    options.UseNpgsql(connectionString));
+builder.Services.AddSingleton<IValidateOptions<DatabaseOptions>, DatabaseOptionsValidator>();
+
+builder.Services.AddDbContext<BookCatalogDbContext>(
+    (serviceProvider, options) =>
+    {
+        var databaseOptions = serviceProvider
+            .GetRequiredService<IOptions<DatabaseOptions>>()
+            .Value;
+
+        options.UseNpgsql(databaseOptions.BookCatalog);
+    });
 
 builder.Services
     .AddHealthChecks()
