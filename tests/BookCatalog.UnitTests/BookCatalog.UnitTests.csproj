@@ -19,7 +19,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\BookCatalog.Api\BookCatalog.Api.csproj" />
     <ProjectReference Include="..\..\src\BookCatalog.Domain\BookCatalog.Domain.csproj" />
-    <ProjectReference Include="..\..\src\BookCatalog.Infrastructure\BookCatalog.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

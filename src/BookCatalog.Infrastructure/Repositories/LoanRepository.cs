@@ -3,6 +3,7 @@ using BookCatalog.Domain.Common.Queries;
 using BookCatalog.Domain.Entities;
 using BookCatalog.Domain.Interfaces;
 using BookCatalog.Infrastructure.Persistence;
+using BookCatalog.Infrastructure.Persistence.Configurations;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
@@ -10,8 +11,6 @@ namespace BookCatalog.Infrastructure.Repositories
 {
     public sealed class LoanRepository : ILoanRepository
     {
-        private const string ActiveLoanBookIndex = "IX_Loans_BookId";
-
         private readonly BookCatalogDbContext _dbContext;
 
         public LoanRepository(BookCatalogDbContext dbContext)
@@ -97,7 +96,7 @@ namespace BookCatalog.Infrastructure.Repositories
                 when (exception.InnerException is PostgresException
                 {
                     SqlState: PostgresErrorCodes.UniqueViolation,
-                    ConstraintName: ActiveLoanBookIndex
+                    ConstraintName: LoanConfiguration.ActiveLoanBookIndexName
                 })
             {
                 _dbContext.Entry(loan).State = EntityState.Detached;

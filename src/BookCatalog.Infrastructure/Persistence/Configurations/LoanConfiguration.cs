@@ -6,6 +6,8 @@ namespace BookCatalog.Infrastructure.Persistence.Configurations
 {
     public sealed class LoanConfiguration : IEntityTypeConfiguration<Loan>
     {
+        internal const string ActiveLoanBookIndexName = "IX_Loans_BookId";
+
         public void Configure(EntityTypeBuilder<Loan> builder)
         {
             builder.ToTable(
@@ -34,6 +36,7 @@ namespace BookCatalog.Infrastructure.Persistence.Configurations
 
             builder.HasIndex(loan => loan.BookId)
                 .IsUnique()
+                .HasDatabaseName(ActiveLoanBookIndexName)
                 .HasFilter("\"ReturnedAt\" IS NULL");
         }
     }

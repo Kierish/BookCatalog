@@ -80,8 +80,6 @@ builder.Services
     .AddHealthChecks()
     .AddDbContextCheck<BookCatalogDbContext>(name: "postgresql", tags: ["ready"]);
 
-// Dependency Injection
-
 // Time Abstraction
 builder.Services.AddSingleton(TimeProvider.System);
 
@@ -118,10 +116,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
 
 app.MapControllers();
 
