@@ -1,5 +1,4 @@
 ﻿using BookCatalog.Domain.Common;
-using BookCatalog.Domain.Common.Queries;
 using BookCatalog.Domain.Interfaces;
 
 namespace BookCatalog.Api.Features.Books.GetBooksList
@@ -17,14 +16,9 @@ namespace BookCatalog.Api.Features.Books.GetBooksList
             GetBooksListRequest request,
             CancellationToken cancellationToken = default)
         {
-            var query = new BookQuery(
-                request.Search,
-                request.AuthorId,
-                request.PublicationYear,
-                request.PageNumber,
-                request.PageSize);
-
-            var pagedBooks = await _bookRepository.GetPagedAsync(query, cancellationToken);
+            var pagedBooks = await _bookRepository.GetPagedAsync(
+                request.ToQuery(),
+                cancellationToken);
 
             return pagedBooks.Map(b => b.ToResponse());
         }

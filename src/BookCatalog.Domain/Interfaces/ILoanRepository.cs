@@ -6,6 +6,7 @@ namespace BookCatalog.Domain.Interfaces
 {
     public interface ILoanRepository
     {
+        Task<bool> HasLoanHistoryAsync(Guid bookId, CancellationToken cancellationToken = default);
         Task<bool> HasActiveLoanAsync(Guid bookId, CancellationToken cancellationToken = default);
         Task<bool> TryBorrowAsync(Loan loan, User user, CancellationToken cancellationToken = default);
         Task<Loan?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);

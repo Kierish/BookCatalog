@@ -18,6 +18,13 @@ namespace BookCatalog.Infrastructure.Repositories
             _dbContext = dbContext;
         }
 
+        public Task<bool> HasLoanHistoryAsync(Guid bookId, CancellationToken cancellationToken = default)
+        {
+            return _dbContext.Loans.AnyAsync(
+                loan => loan.BookId == bookId,
+                cancellationToken);
+        }
+
         public Task<bool> HasActiveLoanAsync(Guid bookId, CancellationToken cancellationToken = default)
         {
             return _dbContext.Loans.AnyAsync(loan =>

@@ -103,36 +103,28 @@ namespace BookCatalog.Infrastructure.Repositories
 
         public async Task<bool> UpdateAsync(Book book, CancellationToken cancellationToken = default)
         {
-            var existingBook = await _dbContext.Books
-                .SingleOrDefaultAsync(existingBook => existingBook.Id == book.Id, cancellationToken);
+            var updatedCount = await _dbContext.Books
+                .Where(existingBook => existingBook.Id == book.Id)
+                .ExecuteUpdateAsync(
+                    setters => setters
+                        .SetProperty(existingBook => existingBook.Title, book.Title)
+                        .SetProperty(existingBook => existingBook.AuthorId, book.AuthorId)
+                        .SetProperty(existingBook => existingBook.Isbn, book.Isbn)
+                        .SetProperty(
+                            existingBook => existingBook.PublicationYear,
+                            book.PublicationYear),
+                    cancellationToken);
 
-            if (existingBook is null)
-            {
-                return false;
-            }
-
-            existingBook.Title = book.Title;
-            existingBook.AuthorId = book.AuthorId;
-            existingBook.Isbn = book.Isbn;
-            existingBook.PublicationYear = book.PublicationYear;
-
-            await _dbContext.SaveChangesAsync(cancellationToken);
-            return true;
+            return updatedCount > 0;
         }
 
         public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            var book = await _dbContext.Books
-                .SingleOrDefaultAsync(book => book.Id == id, cancellationToken);
+            var deletedCount = await _dbContext.Books
+                .Where(book => book.Id == id)
+                .ExecuteDeleteAsync(cancellationToken);
 
-            if (book is null)
-            {
-                return false;
-            }
-
-            _dbContext.Books.Remove(book);
-            await _dbContext.SaveChangesAsync(cancellationToken);
-            return true;
+            return deletedCount > 0;
         }
     }
 }

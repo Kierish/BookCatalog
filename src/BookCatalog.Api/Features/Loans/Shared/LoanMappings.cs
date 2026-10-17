@@ -1,5 +1,6 @@
 using BookCatalog.Api.Features.Loans.BorrowBook;
 using BookCatalog.Api.Features.Loans.GetLoanHistory;
+using BookCatalog.Domain.Common.Queries;
 using BookCatalog.Domain.Entities;
 
 namespace BookCatalog.Api.Features.Loans
@@ -38,6 +39,15 @@ namespace BookCatalog.Api.Features.Loans
                 loan.BorrowedAt,
                 loan.ReturnedAt
             );
+        }
+
+        public static LoanQuery ToQuery(this GetLoanHistoryRequest request)
+        {
+            return new LoanQuery(
+                request.BookId,
+                request.UserId,
+                request.PageNumber,
+                request.PageSize);
         }
     }
 }

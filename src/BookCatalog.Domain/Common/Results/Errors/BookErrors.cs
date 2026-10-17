@@ -9,5 +9,12 @@ namespace BookCatalog.Domain.Common.Results.Errors
                 "Books.NotFound",
                 $"Book with ID '{id}' was not found.");
         }
+
+        public static Error HasLoanHistory(Guid id)
+        {
+            return Error.Conflict(
+                "Books.HasLoanHistory",
+                $"Book with ID '{id}' cannot be deleted because it has loan history.");
+        }
     }
 }

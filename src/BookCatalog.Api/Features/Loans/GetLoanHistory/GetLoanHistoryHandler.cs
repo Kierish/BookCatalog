@@ -1,5 +1,4 @@
 using BookCatalog.Domain.Common;
-using BookCatalog.Domain.Common.Queries;
 using BookCatalog.Domain.Interfaces;
 
 namespace BookCatalog.Api.Features.Loans.GetLoanHistory
@@ -17,13 +16,9 @@ namespace BookCatalog.Api.Features.Loans.GetLoanHistory
             GetLoanHistoryRequest request,
             CancellationToken cancellationToken = default)
         {
-            var query = new LoanQuery(
-                request.BookId,
-                request.UserId,
-                request.PageNumber,
-                request.PageSize);
-
-            var pagedLoans = await _loanRepository.GetPagedAsync(query, cancellationToken);
+            var pagedLoans = await _loanRepository.GetPagedAsync(
+                request.ToQuery(),
+                cancellationToken);
 
             return pagedLoans.Map(loan => loan.ToHistoryResponse());
         }

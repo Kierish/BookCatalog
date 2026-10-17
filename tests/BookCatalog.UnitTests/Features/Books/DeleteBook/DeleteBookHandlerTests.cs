@@ -9,12 +9,13 @@ namespace BookCatalog.UnitTests.Features.Books.DeleteBook
     public sealed class DeleteBookHandlerTests
     {
         private readonly IBookRepository _bookRepository = Substitute.For<IBookRepository>();
+        private readonly ILoanRepository _loanRepository = Substitute.For<ILoanRepository>();
         private readonly ILogger<DeleteBookHandler> _logger = Substitute.For<ILogger<DeleteBookHandler>>();
         private readonly DeleteBookHandler _handler;
 
         public DeleteBookHandlerTests()
         {
-            _handler = new DeleteBookHandler(_bookRepository, _logger);
+            _handler = new DeleteBookHandler(_bookRepository, _loanRepository, _logger);
         }
 
         [Fact]
@@ -39,6 +40,19 @@ namespace BookCatalog.UnitTests.Features.Books.DeleteBook
 
             result.IsFailure.ShouldBeTrue();
             result.Error.Code.ShouldBe("Books.NotFound");
+        }
+
+        [Fact]
+        public async Task HandleAsync_WhenBookHasLoanHistory_ShouldReturnFailure()
+        {
+            var bookId = Guid.CreateVersion7();
+            _loanRepository.HasLoanHistoryAsync(bookId).Returns(true);
+
+            var result = await _handler.HandleAsync(bookId);
+
+            result.IsFailure.ShouldBeTrue();
+            result.Error.Code.ShouldBe("Books.HasLoanHistory");
+            await _bookRepository.DidNotReceive().DeleteAsync(bookId);
         }
     }
 }
