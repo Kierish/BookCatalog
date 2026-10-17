@@ -43,8 +43,7 @@ namespace BookCatalog.Domain.Common.Results
             _value = value;
         }
 
-        public T Value => IsSuccess
-            ? _value!
+        public T Value => IsSuccess ? _value!
             : throw new InvalidOperationException("A failed result does not contain a value.");
 
         public static Result<T> Success(T value)

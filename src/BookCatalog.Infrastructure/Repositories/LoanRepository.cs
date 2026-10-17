@@ -29,6 +29,7 @@ namespace BookCatalog.Infrastructure.Repositories
         public Task<Loan?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
             return _dbContext.Loans
+                .Include(loan => loan.User)
                 .SingleOrDefaultAsync(loan => loan.Id == id, cancellationToken);
         }
 
@@ -79,11 +80,11 @@ namespace BookCatalog.Infrastructure.Repositories
                 query.PageSize);
         }
 
-        public async Task<bool> TryBorrowAsync(Loan loan, CancellationToken cancellationToken = default)
+        public async Task<bool> TryBorrowAsync(
+            Loan loan, 
+            User user, 
+            CancellationToken cancellationToken = default)
         {
-            var user = await _dbContext.Users.FindAsync([loan.UserId], cancellationToken)
-                ?? throw new InvalidOperationException($"User {loan.UserId} not found for loan {loan.Id}.");
-
             user.ActiveLoanCount++;
             _dbContext.Loans.Add(loan);
 
@@ -111,11 +112,8 @@ namespace BookCatalog.Infrastructure.Repositories
             DateTimeOffset returnedAt,
             CancellationToken cancellationToken = default)
         {
-            var user = await _dbContext.Users.FindAsync([loan.UserId], cancellationToken)
-                ?? throw new InvalidOperationException($"User {loan.UserId} not found for loan {loan.Id}.");
-
             loan.ReturnedAt = returnedAt;
-            user.ActiveLoanCount--;
+            loan.User.ActiveLoanCount--;
 
             await _dbContext.SaveChangesAsync(cancellationToken);
         }

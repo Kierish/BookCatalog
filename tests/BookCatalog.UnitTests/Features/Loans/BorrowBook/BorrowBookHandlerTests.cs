@@ -18,16 +18,23 @@ namespace BookCatalog.UnitTests.Features.Loans.BorrowBook
         private readonly Guid _userId = Guid.CreateVersion7();
         private readonly DateTimeOffset _borrowedAt = new(2026, 10, 12, 12, 0, 0, TimeSpan.Zero);
 
+        private readonly User _user;
         private readonly BorrowBookHandler _handler;
 
         private BorrowBookRequest Request => new(_bookId, _userId);
 
         public BorrowBookHandlerTests()
         {
+            _user = new User
+            {
+                Id = _userId,
+                Name = "Alice Johnson"
+            };
+
             _bookRepository.ExistsAsync(_bookId).Returns(true);
-            _userRepository.ExistsAsync(_userId).Returns(true);
+            _userRepository.GetByIdAsync(_userId).Returns(_user);
             _loanRepository.HasActiveLoanAsync(_bookId).Returns(false);
-            _loanRepository.TryBorrowAsync(Arg.Any<Loan>()).Returns(true);
+            _loanRepository.TryBorrowAsync(Arg.Any<Loan>(), _user).Returns(true);
 
             _handler = new BorrowBookHandler(
                 _bookRepository,
@@ -46,21 +53,25 @@ namespace BookCatalog.UnitTests.Features.Loans.BorrowBook
 
             result.IsFailure.ShouldBeTrue();
             result.Error.Code.ShouldBe("Books.NotFound");
-            await _userRepository.DidNotReceive().ExistsAsync(Arg.Any<Guid>());
-            await _loanRepository.DidNotReceive().TryBorrowAsync(Arg.Any<Loan>());
+            await _userRepository.DidNotReceive().GetByIdAsync(Arg.Any<Guid>());
+            await _loanRepository.DidNotReceive().TryBorrowAsync(
+                Arg.Any<Loan>(),
+                Arg.Any<User>());
         }
 
         [Fact]
         public async Task HandleAsync_WhenUserDoesNotExist_ShouldReturnUserNotFound()
         {
-            _userRepository.ExistsAsync(_userId).Returns(false);
+            _userRepository.GetByIdAsync(_userId).Returns((User?)null);
 
             var result = await _handler.HandleAsync(Request);
 
             result.IsFailure.ShouldBeTrue();
             result.Error.Code.ShouldBe("Users.NotFound");
             await _loanRepository.DidNotReceive().HasActiveLoanAsync(Arg.Any<Guid>());
-            await _loanRepository.DidNotReceive().TryBorrowAsync(Arg.Any<Loan>());
+            await _loanRepository.DidNotReceive().TryBorrowAsync(
+                Arg.Any<Loan>(),
+                Arg.Any<User>());
         }
 
         [Fact]
@@ -72,19 +83,23 @@ namespace BookCatalog.UnitTests.Features.Loans.BorrowBook
 
             result.IsFailure.ShouldBeTrue();
             result.Error.Code.ShouldBe("Loans.BookAlreadyBorrowed");
-            await _loanRepository.DidNotReceive().TryBorrowAsync(Arg.Any<Loan>());
+            await _loanRepository.DidNotReceive().TryBorrowAsync(
+                Arg.Any<Loan>(),
+                Arg.Any<User>());
         }
 
         [Fact]
         public async Task HandleAsync_WhenConcurrentBorrowWins_ShouldReturnConflict()
         {
-            _loanRepository.TryBorrowAsync(Arg.Any<Loan>()).Returns(false);
+            _loanRepository.TryBorrowAsync(Arg.Any<Loan>(), _user).Returns(false);
 
             var result = await _handler.HandleAsync(Request);
 
             result.IsFailure.ShouldBeTrue();
             result.Error.Code.ShouldBe("Loans.BookAlreadyBorrowed");
-            await _loanRepository.Received(1).TryBorrowAsync(Arg.Any<Loan>());
+            await _loanRepository.Received(1).TryBorrowAsync(
+                Arg.Any<Loan>(),
+                _user);
         }
 
         [Fact]
@@ -105,7 +120,8 @@ namespace BookCatalog.UnitTests.Features.Loans.BorrowBook
                     loan.BookId == _bookId &&
                     loan.UserId == _userId &&
                     loan.BorrowedAt == _borrowedAt &&
-                    loan.ReturnedAt == null));
+                    loan.ReturnedAt == null),
+                _user);
         }
 
         private sealed class FixedTimeProvider : TimeProvider
