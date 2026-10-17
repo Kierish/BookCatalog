@@ -5,8 +5,10 @@ namespace BookCatalog.Api.Features.Books.CreateBook
 {
     public sealed class CreateBookValidator : AbstractValidator<CreateBookRequest>
     {
-        public CreateBookValidator()
+        public CreateBookValidator(TimeProvider timeProvider)
         {
+            var currentYear = timeProvider.GetUtcNow().Year;
+
             RuleFor(x => x.Title)
                 .Cascade(CascadeMode.Stop)
                 .NotEmpty()
@@ -26,8 +28,8 @@ namespace BookCatalog.Api.Features.Books.CreateBook
                 .WithMessage("ISBN must be a valid ISBN-10 or ISBN-13.");
 
             RuleFor(x => x.PublicationYear)
-                .InclusiveBetween(1, DateTime.UtcNow.Year)
-                .WithMessage($"Publication year must be between 1 and {DateTime.UtcNow.Year}.");
+                .InclusiveBetween(1, currentYear)
+                .WithMessage($"Publication year must be between 1 and {currentYear}.");
         }
     }
 }

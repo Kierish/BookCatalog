@@ -1,11 +1,23 @@
 ﻿using BookCatalog.Api.Features.Books.GetBooksList;
 using FluentValidation.TestHelper;
+using NSubstitute;
 
 namespace BookCatalog.UnitTests.Features.Books.GetBooksList
 {
     public sealed class GetBooksListValidatorTests
     {
-        private readonly GetBooksListValidator _validator = new();
+        private const int CurrentYear = 2026;
+
+        private readonly GetBooksListValidator _validator;
+
+        public GetBooksListValidatorTests()
+        {
+            var timeProvider = Substitute.For<TimeProvider>();
+            timeProvider.GetUtcNow().Returns(
+                new DateTimeOffset(CurrentYear, 1, 1, 0, 0, 0, TimeSpan.Zero));
+
+            _validator = new GetBooksListValidator(timeProvider);
+        }
 
         #region Happy Path
 
@@ -176,7 +188,7 @@ namespace BookCatalog.UnitTests.Features.Books.GetBooksList
         [Fact]
         public void Validate_WhenPublicationYearIsInFuture_ShouldHaveValidationError()
         {
-            var futureYear = DateTime.UtcNow.Year + 1;
+            var futureYear = CurrentYear + 1;
             var request = new GetBooksListRequest(PublicationYear: futureYear);
 
             var result = _validator.TestValidate(request);
@@ -185,7 +197,9 @@ namespace BookCatalog.UnitTests.Features.Books.GetBooksList
         }
 
         [Theory]
-        [MemberData(nameof(GetValidPublicationYears))]
+        [InlineData(null)]
+        [InlineData(1)]
+        [InlineData(CurrentYear)]
         public void Validate_WhenPublicationYearIsWithinAllowedRangeOrNull_ShouldNotHaveValidationError(int? year)
         {
             var request = new GetBooksListRequest(PublicationYear: year);
@@ -194,13 +208,6 @@ namespace BookCatalog.UnitTests.Features.Books.GetBooksList
 
             result.ShouldNotHaveValidationErrorFor(x => x.PublicationYear);
         }
-
-        public static TheoryData<int?> GetValidPublicationYears() => new()
-        {
-            null,                
-            1,                   
-            DateTime.UtcNow.Year  
-        };
 
         #endregion
     }

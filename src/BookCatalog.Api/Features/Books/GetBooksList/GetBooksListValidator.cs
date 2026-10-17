@@ -4,8 +4,10 @@ namespace BookCatalog.Api.Features.Books.GetBooksList
 {
     public sealed class GetBooksListValidator : AbstractValidator<GetBooksListRequest>
     {
-        public GetBooksListValidator()
+        public GetBooksListValidator(TimeProvider timeProvider)
         {
+            var currentYear = timeProvider.GetUtcNow().Year;
+
             RuleFor(request => request.Search)
                 .MaximumLength(200)
                 .When(request => !string.IsNullOrWhiteSpace(request.Search))
@@ -25,9 +27,9 @@ namespace BookCatalog.Api.Features.Books.GetBooksList
                 .WithMessage("PageSize must be between 1 and 50.");
 
             RuleFor(x => x.PublicationYear)
-                .InclusiveBetween(1, DateTime.UtcNow.Year)
+                .InclusiveBetween(1, currentYear)
                 .When(x => x.PublicationYear.HasValue)
-                .WithMessage($"Publication year must be between 1 and {DateTime.UtcNow.Year}.");
+                .WithMessage($"Publication year must be between 1 and {currentYear}.");
         }
     }
 }

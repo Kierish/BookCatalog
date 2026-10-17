@@ -1,11 +1,23 @@
 ﻿using BookCatalog.Api.Features.Books.UpdateBook;
 using FluentValidation.TestHelper;
+using NSubstitute;
 
 namespace BookCatalog.UnitTests.Features.Books.UpdateBook
 {
     public sealed class UpdateBookValidatorTests
     {
-        private readonly UpdateBookValidator _validator = new();
+        private const int CurrentYear = 2026;
+
+        private readonly UpdateBookValidator _validator;
+
+        public UpdateBookValidatorTests()
+        {
+            var timeProvider = Substitute.For<TimeProvider>();
+            timeProvider.GetUtcNow().Returns(
+                new DateTimeOffset(CurrentYear, 1, 1, 0, 0, 0, TimeSpan.Zero));
+
+            _validator = new UpdateBookValidator(timeProvider);
+        }
 
         private static UpdateBookRequest CreateValidRequest() => new(
             Title: "Refactoring: Improving the Design of Existing Code",
@@ -133,7 +145,7 @@ namespace BookCatalog.UnitTests.Features.Books.UpdateBook
         [Fact]
         public void Validate_WhenPublicationYearIsInFuture_ShouldHaveValidationError()
         {
-            var futureYear = DateTime.UtcNow.Year + 1;
+            var futureYear = CurrentYear + 1;
             var request = CreateValidRequest() with { PublicationYear = futureYear };
 
             var result = _validator.TestValidate(request);
@@ -142,7 +154,8 @@ namespace BookCatalog.UnitTests.Features.Books.UpdateBook
         }
 
         [Theory]
-        [MemberData(nameof(GetValidPublicationYears))]
+        [InlineData(1)]
+        [InlineData(CurrentYear)]
         public void Validate_WhenPublicationYearIsWithinAllowedRange_ShouldNotHaveValidationError(int year)
         {
             var request = CreateValidRequest() with { PublicationYear = year };
@@ -151,12 +164,6 @@ namespace BookCatalog.UnitTests.Features.Books.UpdateBook
 
             result.ShouldNotHaveValidationErrorFor(x => x.PublicationYear);
         }
-
-        public static TheoryData<int> GetValidPublicationYears() => new()
-    {
-        1,
-        DateTime.UtcNow.Year
-    };
 
         #endregion
     }

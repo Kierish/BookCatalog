@@ -1,11 +1,23 @@
 ﻿using BookCatalog.Api.Features.Books.CreateBook;
 using FluentValidation.TestHelper;
+using NSubstitute;
 
 namespace BookCatalog.UnitTests.Features.Books.CreateBook
 {
     public sealed class CreateBookValidatorTests
     {
-        private readonly CreateBookValidator _validator = new();
+        private const int CurrentYear = 2026;
+
+        private readonly CreateBookValidator _validator;
+
+        public CreateBookValidatorTests()
+        {
+            var timeProvider = Substitute.For<TimeProvider>();
+            timeProvider.GetUtcNow().Returns(
+                new DateTimeOffset(CurrentYear, 1, 1, 0, 0, 0, TimeSpan.Zero));
+
+            _validator = new CreateBookValidator(timeProvider);
+        }
 
         private static CreateBookRequest CreateValidRequest() => new(
             Title: "Clean Architecture",
@@ -133,7 +145,7 @@ namespace BookCatalog.UnitTests.Features.Books.CreateBook
         [Fact]
         public void Validate_WhenPublicationYearIsInFuture_ShouldHaveValidationError()
         {
-            var futureYear = DateTime.UtcNow.Year + 1;
+            var futureYear = CurrentYear + 1;
             var request = CreateValidRequest() with { PublicationYear = futureYear };
 
             var result = _validator.TestValidate(request);
@@ -142,7 +154,8 @@ namespace BookCatalog.UnitTests.Features.Books.CreateBook
         }
 
         [Theory]
-        [MemberData(nameof(GetValidPublicationYears))]
+        [InlineData(1)]
+        [InlineData(CurrentYear)]
         public void Validate_WhenPublicationYearIsWithinAllowedRange_ShouldNotHaveValidationError(int validYear)
         {
             var request = CreateValidRequest() with { PublicationYear = validYear };
@@ -151,12 +164,6 @@ namespace BookCatalog.UnitTests.Features.Books.CreateBook
 
             result.ShouldNotHaveValidationErrorFor(x => x.PublicationYear);
         }
-
-        public static TheoryData<int> GetValidPublicationYears() => new()
-        {
-            1,                    
-            DateTime.UtcNow.Year  
-        };
 
         #endregion
     }
