@@ -19,13 +19,13 @@ namespace BookCatalog.Api.Features.Books.Shared
             int sum = 0;
             for (int i = 0; i < 9; i++)
             {
-                if (!char.IsDigit(isbn[i])) return false;
+                if (!IsAsciiDigit(isbn[i])) return false;
                 sum += (isbn[i] - '0') * (10 - i);
             }
 
             char last = char.ToUpperInvariant(isbn[9]);
             if (last == 'X') sum += 10;
-            else if (char.IsDigit(last)) sum += last - '0';
+            else if (IsAsciiDigit(last)) sum += last - '0';
             else return false;
 
             return sum % 11 == 0;
@@ -38,12 +38,17 @@ namespace BookCatalog.Api.Features.Books.Shared
             int sum = 0;
             for (int i = 0; i < 13; i++)
             {
-                if (!char.IsDigit(isbn[i])) return false;
+                if (!IsAsciiDigit(isbn[i])) return false;
                 int digit = isbn[i] - '0';
                 sum += i % 2 == 0 ? digit : digit * 3;
             }
 
             return sum % 10 == 0;
+        }
+
+        private static bool IsAsciiDigit(char character)
+        {
+            return character is >= '0' and <= '9';
         }
     }
 }
