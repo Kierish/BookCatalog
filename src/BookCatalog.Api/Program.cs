@@ -3,7 +3,7 @@ using BookCatalog.Api.Exceptions;
 using BookCatalog.Api.Features.Books.CreateBook;
 using BookCatalog.Api.Features.Books.DeleteBook;
 using BookCatalog.Api.Features.Books.GetBookById;
-using BookCatalog.Api.Features.Books.GetBooksList;
+using BookCatalog.Api.Features.Books.GetBooks;
 using BookCatalog.Api.Features.Books.UpdateBook;
 using BookCatalog.Api.Features.Loans.BorrowBook;
 using BookCatalog.Api.Features.Loans.GetLoanHistory;
@@ -91,7 +91,7 @@ builder.Services.AddScoped<ILoanRepository, LoanRepository>();
 
 // Feature Handlers (Book Catalog)
 builder.Services.AddScoped<GetBookByIdHandler>();
-builder.Services.AddScoped<GetBooksListHandler>();
+builder.Services.AddScoped<GetBooksHandler>();
 builder.Services.AddScoped<CreateBookHandler>();
 builder.Services.AddScoped<UpdateBookHandler>();
 builder.Services.AddScoped<DeleteBookHandler>();

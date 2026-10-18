@@ -30,7 +30,7 @@ namespace BookCatalog.Infrastructure.Repositories
                 .SingleOrDefaultAsync(book => book.Id == id, cancellationToken);
         }
 
-        public async Task<PagedResult<Book>> GetPagedAsync(
+        public async Task<Page<Book>> GetPagedAsync(
             BookQuery query,
             CancellationToken cancellationToken = default)
         {
@@ -67,7 +67,7 @@ namespace BookCatalog.Infrastructure.Repositories
 
             if (totalCount == 0 || itemsToSkip >= totalCount)
             {
-                return new PagedResult<Book>([], totalCount, query.PageNumber, query.PageSize);
+                return new Page<Book>([], totalCount, query.PageNumber, query.PageSize);
             }
 
             var books = await booksQuery
@@ -77,7 +77,7 @@ namespace BookCatalog.Infrastructure.Repositories
                 .Take(query.PageSize)
                 .ToListAsync(cancellationToken);
 
-            return new PagedResult<Book>(books, totalCount, query.PageNumber, query.PageSize);
+            return new Page<Book>(books, totalCount, query.PageNumber, query.PageSize);
         }
 
         private static string EscapeLikePattern(string value)

@@ -18,7 +18,7 @@ namespace BookCatalog.Infrastructure.Repositories
             _dbContext = dbContext;
         }
 
-        public Task<bool> HasLoanHistoryAsync(Guid bookId, CancellationToken cancellationToken = default)
+        public Task<bool> HasAnyLoanAsync(Guid bookId, CancellationToken cancellationToken = default)
         {
             return _dbContext.Loans.AnyAsync(
                 loan => loan.BookId == bookId,
@@ -40,8 +40,8 @@ namespace BookCatalog.Infrastructure.Repositories
                 .SingleOrDefaultAsync(loan => loan.Id == id, cancellationToken);
         }
 
-        public async Task<PagedResult<Loan>> GetPagedAsync(
-            LoanQuery query,
+        public async Task<Page<Loan>> GetPagedAsync(
+            LoanHistoryQuery query,
             CancellationToken cancellationToken = default)
         {
             IQueryable<Loan> loansQuery = _dbContext.Loans
@@ -66,7 +66,7 @@ namespace BookCatalog.Infrastructure.Repositories
 
             if (totalCount == 0 || itemsToSkip >= totalCount)
             {
-                return new PagedResult<Loan>(
+                return new Page<Loan>(
                     [],
                     totalCount,
                     query.PageNumber,
@@ -80,7 +80,7 @@ namespace BookCatalog.Infrastructure.Repositories
                 .Take(query.PageSize)
                 .ToListAsync(cancellationToken);
 
-            return new PagedResult<Loan>(
+            return new Page<Loan>(
                 loans,
                 totalCount,
                 query.PageNumber,

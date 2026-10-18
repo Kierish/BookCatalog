@@ -46,7 +46,7 @@ namespace BookCatalog.UnitTests.Features.Books.DeleteBook
         public async Task HandleAsync_WhenBookHasLoanHistory_ShouldReturnFailure()
         {
             var bookId = Guid.CreateVersion7();
-            _loanRepository.HasLoanHistoryAsync(bookId).Returns(true);
+            _loanRepository.HasAnyLoanAsync(bookId).Returns(true);
 
             var result = await _handler.HandleAsync(bookId);
 

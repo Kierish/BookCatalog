@@ -12,7 +12,7 @@ namespace BookCatalog.Api.Features.Loans.GetLoanHistory
             _loanRepository = loanRepository;
         }
 
-        public async Task<PagedResult<LoanHistoryResponse>> HandleAsync(
+        public async Task<Page<LoanHistoryResponse>> HandleAsync(
             GetLoanHistoryRequest request,
             CancellationToken cancellationToken = default)
         {

@@ -1,6 +1,6 @@
 ﻿using BookCatalog.Api.Features.Books.CreateBook;
 using BookCatalog.Api.Features.Books.UpdateBook;
-using BookCatalog.Api.Features.Books.GetBooksList;
+using BookCatalog.Api.Features.Books.GetBooks;
 using BookCatalog.Domain.Common.Queries;
 using BookCatalog.Domain.Entities;
 
@@ -44,7 +44,7 @@ namespace BookCatalog.Api.Features.Books
             };
         }
 
-        public static BookQuery ToQuery(this GetBooksListRequest request)
+        public static BookQuery ToQuery(this GetBooksRequest request)
         {
             return new BookQuery(
                 request.Search,

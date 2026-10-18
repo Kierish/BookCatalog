@@ -1,22 +1,22 @@
-﻿using BookCatalog.Api.Features.Books.GetBooksList;
+﻿using BookCatalog.Api.Features.Books.GetBooks;
 using FluentValidation.TestHelper;
 using NSubstitute;
 
-namespace BookCatalog.UnitTests.Features.Books.GetBooksList
+namespace BookCatalog.UnitTests.Features.Books.GetBooks
 {
-    public sealed class GetBooksListValidatorTests
+    public sealed class GetBooksValidatorTests
     {
         private const int CurrentYear = 2026;
 
-        private readonly GetBooksListValidator _validator;
+        private readonly GetBooksValidator _validator;
 
-        public GetBooksListValidatorTests()
+        public GetBooksValidatorTests()
         {
             var timeProvider = Substitute.For<TimeProvider>();
             timeProvider.GetUtcNow().Returns(
                 new DateTimeOffset(CurrentYear, 1, 1, 0, 0, 0, TimeSpan.Zero));
 
-            _validator = new GetBooksListValidator(timeProvider);
+            _validator = new GetBooksValidator(timeProvider);
         }
 
         #region Happy Path
@@ -24,7 +24,7 @@ namespace BookCatalog.UnitTests.Features.Books.GetBooksList
         [Fact]
         public void Validate_WhenDefaultRequest_ShouldNotHaveAnyValidationErrors()
         {
-            var request = new GetBooksListRequest();
+            var request = new GetBooksRequest();
 
             var result = _validator.TestValidate(request);
 
@@ -34,7 +34,7 @@ namespace BookCatalog.UnitTests.Features.Books.GetBooksList
         [Fact]
         public void Validate_WhenAllFiltersArePopulatedAndValid_ShouldNotHaveAnyValidationErrors()
         {
-            var request = new GetBooksListRequest(
+            var request = new GetBooksRequest(
                 Search: "Clean Code",
                 AuthorId: Guid.CreateVersion7(),
                 PublicationYear: 2008,
@@ -55,7 +55,7 @@ namespace BookCatalog.UnitTests.Features.Books.GetBooksList
         [InlineData(-1)]
         public void Validate_WhenPageNumberIsLessThanOne_ShouldHaveValidationError(int invalidPageNumber)
         {
-            var request = new GetBooksListRequest(PageNumber: invalidPageNumber);
+            var request = new GetBooksRequest(PageNumber: invalidPageNumber);
 
             var result = _validator.TestValidate(request);
 
@@ -68,7 +68,7 @@ namespace BookCatalog.UnitTests.Features.Books.GetBooksList
         [InlineData(100)]
         public void Validate_WhenPageNumberIsAtLeastOne_ShouldNotHaveValidationError(int validPageNumber)
         {
-            var request = new GetBooksListRequest(PageNumber: validPageNumber);
+            var request = new GetBooksRequest(PageNumber: validPageNumber);
 
             var result = _validator.TestValidate(request);
 
@@ -84,7 +84,7 @@ namespace BookCatalog.UnitTests.Features.Books.GetBooksList
         [InlineData(51)] 
         public void Validate_WhenPageSizeIsOutOfRange_ShouldHaveValidationError(int invalidPageSize)
         {
-            var request = new GetBooksListRequest(PageSize: invalidPageSize);
+            var request = new GetBooksRequest(PageSize: invalidPageSize);
 
             var result = _validator.TestValidate(request);
 
@@ -98,7 +98,7 @@ namespace BookCatalog.UnitTests.Features.Books.GetBooksList
         [InlineData(50)] 
         public void Validate_WhenPageSizeIsWithinBoundaries_ShouldNotHaveValidationError(int validPageSize)
         {
-            var request = new GetBooksListRequest(PageSize: validPageSize);
+            var request = new GetBooksRequest(PageSize: validPageSize);
 
             var result = _validator.TestValidate(request);
 
@@ -116,7 +116,7 @@ namespace BookCatalog.UnitTests.Features.Books.GetBooksList
         [InlineData("Domain-Driven Design")]
         public void Validate_WhenSearchIsNullOrWhiteSpaceOrValidLength_ShouldNotHaveValidationError(string? search)
         {
-            var request = new GetBooksListRequest(Search: search);
+            var request = new GetBooksRequest(Search: search);
 
             var result = _validator.TestValidate(request);
 
@@ -126,7 +126,7 @@ namespace BookCatalog.UnitTests.Features.Books.GetBooksList
         [Fact]
         public void Validate_WhenSearchExceeds200Characters_ShouldHaveValidationError()
         {
-            var request = new GetBooksListRequest(Search: new string('a', 201));
+            var request = new GetBooksRequest(Search: new string('a', 201));
 
             var result = _validator.TestValidate(request);
 
@@ -141,7 +141,7 @@ namespace BookCatalog.UnitTests.Features.Books.GetBooksList
         [Fact]
         public void Validate_WhenAuthorIdIsNull_ShouldNotHaveValidationError()
         {
-            var request = new GetBooksListRequest(AuthorId: null);
+            var request = new GetBooksRequest(AuthorId: null);
 
             var result = _validator.TestValidate(request);
 
@@ -151,7 +151,7 @@ namespace BookCatalog.UnitTests.Features.Books.GetBooksList
         [Fact]
         public void Validate_WhenAuthorIdIsValid_ShouldNotHaveValidationError()
         {
-            var request = new GetBooksListRequest(AuthorId: Guid.CreateVersion7());
+            var request = new GetBooksRequest(AuthorId: Guid.CreateVersion7());
 
             var result = _validator.TestValidate(request);
 
@@ -161,7 +161,7 @@ namespace BookCatalog.UnitTests.Features.Books.GetBooksList
         [Fact]
         public void Validate_WhenAuthorIdIsEmpty_ShouldHaveValidationError()
         {
-            var request = new GetBooksListRequest(AuthorId: Guid.Empty);
+            var request = new GetBooksRequest(AuthorId: Guid.Empty);
 
             var result = _validator.TestValidate(request);
 
@@ -178,7 +178,7 @@ namespace BookCatalog.UnitTests.Features.Books.GetBooksList
         [InlineData(-1)]
         public void Validate_WhenPublicationYearIsLessThanOne_ShouldHaveValidationError(int year)
         {
-            var request = new GetBooksListRequest(PublicationYear: year);
+            var request = new GetBooksRequest(PublicationYear: year);
 
             var result = _validator.TestValidate(request);
 
@@ -189,7 +189,7 @@ namespace BookCatalog.UnitTests.Features.Books.GetBooksList
         public void Validate_WhenPublicationYearIsInFuture_ShouldHaveValidationError()
         {
             var futureYear = CurrentYear + 1;
-            var request = new GetBooksListRequest(PublicationYear: futureYear);
+            var request = new GetBooksRequest(PublicationYear: futureYear);
 
             var result = _validator.TestValidate(request);
 
@@ -202,7 +202,7 @@ namespace BookCatalog.UnitTests.Features.Books.GetBooksList
         [InlineData(CurrentYear)]
         public void Validate_WhenPublicationYearIsWithinAllowedRangeOrNull_ShouldNotHaveValidationError(int? year)
         {
-            var request = new GetBooksListRequest(PublicationYear: year);
+            var request = new GetBooksRequest(PublicationYear: year);
 
             var result = _validator.TestValidate(request);
 

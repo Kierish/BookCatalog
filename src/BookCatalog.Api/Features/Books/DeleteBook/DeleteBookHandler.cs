@@ -24,7 +24,7 @@ namespace BookCatalog.Api.Features.Books.DeleteBook
             Guid id,
             CancellationToken cancellationToken = default)
         {
-            if (await _loanRepository.HasLoanHistoryAsync(id, cancellationToken))
+            if (await _loanRepository.HasAnyLoanAsync(id, cancellationToken))
             {
                 _logger.LogInformation(
                     "Book deletion rejected. BookId: {BookId} has loan history.",

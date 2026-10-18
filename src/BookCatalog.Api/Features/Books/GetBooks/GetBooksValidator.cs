@@ -1,10 +1,10 @@
 ﻿using FluentValidation;
 
-namespace BookCatalog.Api.Features.Books.GetBooksList
+namespace BookCatalog.Api.Features.Books.GetBooks
 {
-    public sealed class GetBooksListValidator : AbstractValidator<GetBooksListRequest>
+    public sealed class GetBooksValidator : AbstractValidator<GetBooksRequest>
     {
-        public GetBooksListValidator(TimeProvider timeProvider)
+        public GetBooksValidator(TimeProvider timeProvider)
         {
             var currentYear = timeProvider.GetUtcNow().Year;
 

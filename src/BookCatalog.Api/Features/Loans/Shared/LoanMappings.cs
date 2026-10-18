@@ -41,9 +41,9 @@ namespace BookCatalog.Api.Features.Loans
             );
         }
 
-        public static LoanQuery ToQuery(this GetLoanHistoryRequest request)
+        public static LoanHistoryQuery ToQuery(this GetLoanHistoryRequest request)
         {
-            return new LoanQuery(
+            return new LoanHistoryQuery(
                 request.BookId,
                 request.UserId,
                 request.PageNumber,
