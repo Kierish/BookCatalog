@@ -3,6 +3,7 @@ using BookCatalog.Domain.Common.Queries;
 using BookCatalog.Domain.Entities;
 using BookCatalog.Domain.Interfaces;
 using BookCatalog.Infrastructure.Persistence;
+using BookCatalog.Infrastructure.Persistence.Configurations;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
@@ -10,13 +11,18 @@ namespace BookCatalog.Infrastructure.Repositories
 {
     public sealed class LoanRepository : ILoanRepository
     {
-        private const string ActiveLoanBookIndex = "IX_Loans_BookId";
-
         private readonly BookCatalogDbContext _dbContext;
 
         public LoanRepository(BookCatalogDbContext dbContext)
         {
             _dbContext = dbContext;
+        }
+
+        public Task<bool> HasAnyLoanAsync(Guid bookId, CancellationToken cancellationToken = default)
+        {
+            return _dbContext.Loans.AnyAsync(
+                loan => loan.BookId == bookId,
+                cancellationToken);
         }
 
         public Task<bool> HasActiveLoanAsync(Guid bookId, CancellationToken cancellationToken = default)
@@ -30,11 +36,12 @@ namespace BookCatalog.Infrastructure.Repositories
         public Task<Loan?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
             return _dbContext.Loans
+                .Include(loan => loan.User)
                 .SingleOrDefaultAsync(loan => loan.Id == id, cancellationToken);
         }
 
-        public async Task<PagedResult<Loan>> GetPagedAsync(
-            LoanQuery query,
+        public async Task<Page<Loan>> GetPagedAsync(
+            LoanHistoryQuery query,
             CancellationToken cancellationToken = default)
         {
             IQueryable<Loan> loansQuery = _dbContext.Loans
@@ -59,7 +66,7 @@ namespace BookCatalog.Infrastructure.Repositories
 
             if (totalCount == 0 || itemsToSkip >= totalCount)
             {
-                return new PagedResult<Loan>(
+                return new Page<Loan>(
                     [],
                     totalCount,
                     query.PageNumber,
@@ -73,18 +80,18 @@ namespace BookCatalog.Infrastructure.Repositories
                 .Take(query.PageSize)
                 .ToListAsync(cancellationToken);
 
-            return new PagedResult<Loan>(
+            return new Page<Loan>(
                 loans,
                 totalCount,
                 query.PageNumber,
                 query.PageSize);
         }
 
-        public async Task<bool> TryBorrowAsync(Loan loan, CancellationToken cancellationToken = default)
+        public async Task<bool> TryBorrowAsync(
+            Loan loan, 
+            User user, 
+            CancellationToken cancellationToken = default)
         {
-            var user = await _dbContext.Users.FindAsync([loan.UserId], cancellationToken)
-                ?? throw new InvalidOperationException($"User {loan.UserId} not found for loan {loan.Id}.");
-
             user.ActiveLoanCount++;
             _dbContext.Loans.Add(loan);
 
@@ -97,7 +104,7 @@ namespace BookCatalog.Infrastructure.Repositories
                 when (exception.InnerException is PostgresException
                 {
                     SqlState: PostgresErrorCodes.UniqueViolation,
-                    ConstraintName: ActiveLoanBookIndex
+                    ConstraintName: LoanConfiguration.ActiveLoanBookIndexName
                 })
             {
                 _dbContext.Entry(loan).State = EntityState.Detached;
@@ -112,11 +119,8 @@ namespace BookCatalog.Infrastructure.Repositories
             DateTimeOffset returnedAt,
             CancellationToken cancellationToken = default)
         {
-            var user = await _dbContext.Users.FindAsync([loan.UserId], cancellationToken)
-                ?? throw new InvalidOperationException($"User {loan.UserId} not found for loan {loan.Id}.");
-
             loan.ReturnedAt = returnedAt;
-            user.ActiveLoanCount--;
+            loan.User.ActiveLoanCount--;
 
             await _dbContext.SaveChangesAsync(cancellationToken);
         }

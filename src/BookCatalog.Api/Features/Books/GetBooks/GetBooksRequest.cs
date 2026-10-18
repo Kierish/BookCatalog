@@ -1,6 +1,6 @@
-﻿namespace BookCatalog.Api.Features.Books.GetBooksList
+﻿namespace BookCatalog.Api.Features.Books.GetBooks
 {
-    public sealed record GetBooksListRequest(
+    public sealed record GetBooksRequest(
         string? Search = null,
         Guid? AuthorId = null,
         int? PublicationYear = null,

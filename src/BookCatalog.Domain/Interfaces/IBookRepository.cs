@@ -8,7 +8,7 @@ namespace BookCatalog.Domain.Interfaces
     {
         Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default);
         Task<Book?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
-        Task<PagedResult<Book>> GetPagedAsync(BookQuery query, CancellationToken cancellationToken = default);
+        Task<Page<Book>> GetPagedAsync(BookQuery query, CancellationToken cancellationToken = default);
         Task<Book> AddAsync(Book book, CancellationToken cancellationToken = default);
         Task<bool> UpdateAsync(Book book, CancellationToken cancellationToken = default);
         Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);

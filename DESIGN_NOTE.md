@@ -75,13 +75,13 @@ docker-compose.yml               # PostgreSQL, migrations, and API orchestration
 | Introduced `IBookRepository` and replaced direct dependencies on `InMemoryBookStore`. | Hides storage details from handlers and gives them methods for reading and changing books. Prepares the system for a database implementation by allowing the repository and its DI registration to change without rewriting handlers, as long as the contract stays the same. |
 | Extracted mapping logic into `BookMappings` extension methods. | Removes repeated mapping code from handlers and keeps conversions in one place. Preserves the separation between API contracts and the internal model, and makes mapping easier to test. |
 | Implemented centralized exception handling using `GlobalExceptionHandler`. | Ensures unexpected errors return a consistent `500` ProblemDetails response with a generic message and `traceId`. Logs the original exception for debugging while preventing internal messages and stack traces from reaching the client. |
-| Added filtering by title, author, and publication year, with pagination through `PagedResult<T>`. | Allows clients to narrow down the catalog and move through pages. Applying filters before pagination ensures the total count includes all matching books, while the response contains only the requested page and its metadata. |
+| Added filtering by title, author, and publication year, with pagination through `Page<T>`. | Allows clients to narrow down the catalog and move through pages. Applying filters before pagination ensures the total count includes all matching books, while the response contains only the requested page and its metadata. |
 
 ### Testing Strategy
 
 - **Decision:** Use xUnit, NSubstitute, and Shouldly to check behavior without a database, running API, or external services.
 - **Handlers:** Check operation results, selected repository arguments, and missing-book scenarios. Repository substitutes keep these tests independent of storage, meaning none of these unit tests will break when swapping to a real database in Week 3.
-- **Mappings and Pagination Models:** Check field conversions separately, plus page calculations and metadata preservation in `PagedResult<T>`. New fields still require updating test expectations.
+- **Mappings and Pagination Models:** Check field conversions separately, plus page calculations and metadata preservation in `Page<T>`. New fields still require updating test expectations.
 - **Validators and Exceptions:** Check valid inputs, invalid values, and selected boundaries. Verify the exception handler's response fields and absence of internal exception details.
 - **Scope:** I prioritized these behaviors over logging assertions and explicit exception-propagation tests rather than pursuing 100% coverage. Repository filtering and page selection are not tested directly; handler tests only verify parameter forwarding and mapping. HTTP pipeline and database integration tests remain future work.
 

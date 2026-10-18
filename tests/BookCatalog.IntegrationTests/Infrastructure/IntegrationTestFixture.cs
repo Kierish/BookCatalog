@@ -18,7 +18,7 @@ namespace BookCatalog.IntegrationTests.Infrastructure
                 .WithPassword("postgres")
                 .Build();
 
-        private BookCatalogApiFactory? _application;
+        private BookCatalogApiFactory? _factory;
         private NpgsqlConnection? _databaseConnection;
         private Respawner? _respawner;
 
@@ -28,7 +28,7 @@ namespace BookCatalog.IntegrationTests.Infrastructure
         {
             await _postgresContainer.StartAsync();
 
-            _application = new BookCatalogApiFactory(
+            _factory = new BookCatalogApiFactory(
                 _postgresContainer.GetConnectionString());
 
             await ApplyMigrationsAsync();
@@ -50,7 +50,7 @@ namespace BookCatalog.IntegrationTests.Infrastructure
                     ]
                 });
 
-            Client = _application.CreateClient(
+            Client = _factory.CreateClient(
                 new WebApplicationFactoryClientOptions
                 {
                     BaseAddress = new Uri("https://localhost")
@@ -70,13 +70,13 @@ namespace BookCatalog.IntegrationTests.Infrastructure
 
         public async Task ExecuteDbContextAsync(Func<BookCatalogDbContext, Task> action)
         {
-            if (_application is null)
+            if (_factory is null)
             {
                 throw new InvalidOperationException(
                     "The test application is not initialized.");
             }
 
-            await using var scope = _application.Services.CreateAsyncScope();
+            await using var scope = _factory.Services.CreateAsyncScope();
 
             var dbContext = scope.ServiceProvider
                 .GetRequiredService<BookCatalogDbContext>();
@@ -86,13 +86,13 @@ namespace BookCatalog.IntegrationTests.Infrastructure
 
         private async Task ApplyMigrationsAsync()
         {
-            if (_application is null)
+            if (_factory is null)
             {
                 throw new InvalidOperationException(
                     "The test application is not initialized.");
             }
 
-            await using var scope = _application.Services.CreateAsyncScope();
+            await using var scope = _factory.Services.CreateAsyncScope();
 
             var dbContext = scope.ServiceProvider
                 .GetRequiredService<BookCatalogDbContext>();
@@ -104,9 +104,9 @@ namespace BookCatalog.IntegrationTests.Infrastructure
         {
             Client?.Dispose();
 
-            if (_application is not null)
+            if (_factory is not null)
             {
-                await _application.DisposeAsync();
+                await _factory.DisposeAsync();
             }
 
             if (_databaseConnection is not null)

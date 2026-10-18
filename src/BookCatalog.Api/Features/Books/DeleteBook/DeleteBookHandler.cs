@@ -7,11 +7,16 @@ namespace BookCatalog.Api.Features.Books.DeleteBook
     public sealed class DeleteBookHandler
     {
         private readonly IBookRepository _bookRepository;
+        private readonly ILoanRepository _loanRepository;
         private readonly ILogger<DeleteBookHandler> _logger;
 
-        public DeleteBookHandler(IBookRepository bookRepository, ILogger<DeleteBookHandler> logger)
+        public DeleteBookHandler(
+            IBookRepository bookRepository,
+            ILoanRepository loanRepository,
+            ILogger<DeleteBookHandler> logger)
         {
             _bookRepository = bookRepository;
+            _loanRepository = loanRepository;
             _logger = logger;
         }
 
@@ -19,6 +24,16 @@ namespace BookCatalog.Api.Features.Books.DeleteBook
             Guid id,
             CancellationToken cancellationToken = default)
         {
+            if (await _loanRepository.HasAnyLoanAsync(id, cancellationToken))
+            {
+                _logger.LogInformation(
+                    "Book deletion rejected. BookId: {BookId} has loan history.",
+                    id);
+
+                return Result.Failure(
+                    BookErrors.HasLoanHistory(id));
+            }
+
             var isDeleted = await _bookRepository.DeleteAsync(id, cancellationToken);
             
             if (!isDeleted)

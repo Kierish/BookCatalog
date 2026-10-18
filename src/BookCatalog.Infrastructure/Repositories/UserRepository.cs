@@ -1,6 +1,6 @@
+using BookCatalog.Domain.Entities;
 using BookCatalog.Domain.Interfaces;
 using BookCatalog.Infrastructure.Persistence;
-using Microsoft.EntityFrameworkCore;
 
 namespace BookCatalog.Infrastructure.Repositories
 {
@@ -13,9 +13,9 @@ namespace BookCatalog.Infrastructure.Repositories
             _dbContext = dbContext;
         }
 
-        public Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default)
+        public async Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            return _dbContext.Users.AnyAsync(user => user.Id == id, cancellationToken);
+            return await _dbContext.Users.FindAsync([id], cancellationToken);
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿using BookCatalog.Api.Features.Books;
-using BookCatalog.Api.Features.Books.GetBooksList;
+using BookCatalog.Api.Features.Books.GetBooks;
 using BookCatalog.Domain.Common;
 using BookCatalog.Domain.Common.Queries;
 using BookCatalog.Domain.Entities;
@@ -7,29 +7,29 @@ using BookCatalog.Domain.Interfaces;
 using NSubstitute;
 using Shouldly;
 
-namespace BookCatalog.UnitTests.Features.Books.GetBooksList
+namespace BookCatalog.UnitTests.Features.Books.GetBooks
 {
-    public sealed class GetBooksListHandlerTests
+    public sealed class GetBooksHandlerTests
     {
         private readonly IBookRepository _bookRepository = Substitute.For<IBookRepository>();
-        private readonly GetBooksListHandler _handler;
+        private readonly GetBooksHandler _handler;
 
-        public GetBooksListHandlerTests()
+        public GetBooksHandlerTests()
         {
-            _handler = new GetBooksListHandler(_bookRepository);
+            _handler = new GetBooksHandler(_bookRepository);
         }
 
         [Fact]
         public async Task HandleAsync_WhenCalled_ShouldPassRequestParametersToRepository()
         {
             var authorId = Guid.CreateVersion7();
-            var request = new GetBooksListRequest(
+            var request = new GetBooksRequest(
                 Search: "Clean",
                 AuthorId: authorId,
                 PublicationYear: 2008,
                 PageNumber: 2,
                 PageSize: 25);
-            SetupRepository(new PagedResult<Book>([], TotalCount: 0, PageNumber: 1, PageSize: 10));
+            SetupRepository(new Page<Book>([], TotalCount: 0, PageNumber: 1, PageSize: 10));
 
             await _handler.HandleAsync(request);
 
@@ -66,14 +66,14 @@ namespace BookCatalog.UnitTests.Features.Books.GetBooksList
                 }
             };
 
-            SetupRepository(new PagedResult<Book>(books, TotalCount: 2, PageNumber: 1, PageSize: 10));
+            SetupRepository(new Page<Book>(books, TotalCount: 2, PageNumber: 1, PageSize: 10));
 
-            var result = await _handler.HandleAsync(new GetBooksListRequest());
+            var result = await _handler.HandleAsync(new GetBooksRequest());
 
             result.Items.ShouldBe(books.Select(b => b.ToResponse()));
         }
 
-        private void SetupRepository(PagedResult<Book> page)
+        private void SetupRepository(Page<Book> page)
         {
             _bookRepository
                 .GetPagedAsync(Arg.Any<BookQuery>())

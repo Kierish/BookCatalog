@@ -12,9 +12,9 @@ namespace BookCatalog.Api.Features.Loans
     public sealed class LoansController : ApiControllerBase
     {
         [HttpGet]
-        [ProducesResponseType(typeof(PagedResult<LoanHistoryResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Page<LoanHistoryResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(HttpValidationProblemDetails), StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<PagedResult<LoanHistoryResponse>>> GetHistory(
+        public async Task<ActionResult<Page<LoanHistoryResponse>>> GetHistory(
             [FromQuery] GetLoanHistoryRequest request,
             [FromServices] GetLoanHistoryHandler handler,
             CancellationToken cancellationToken)

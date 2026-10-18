@@ -23,7 +23,7 @@ namespace BookCatalog.Api.Features.Books.GetBookById
 
             if (book is null)
             {
-                _logger.LogInformation("Book with ID {Id} was not found", id);
+                _logger.LogInformation("Book with ID {BookId} was not found", id);
 
                 return Result<BookResponse>.Failure(
                     BookErrors.NotFound(id));

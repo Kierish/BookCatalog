@@ -28,7 +28,7 @@ namespace BookCatalog.UnitTests.Features.Loans.GetLoanHistory
                 UserId: userId,
                 PageNumber: 2,
                 PageSize: 25);
-            SetupRepository(new PagedResult<Loan>(
+            SetupRepository(new Page<Loan>(
                 [],
                 TotalCount: 0,
                 PageNumber: 2,
@@ -37,7 +37,7 @@ namespace BookCatalog.UnitTests.Features.Loans.GetLoanHistory
             await _handler.HandleAsync(request);
 
             await _loanRepository.Received(1).GetPagedAsync(
-                Arg.Is<LoanQuery>(query =>
+                Arg.Is<LoanHistoryQuery>(query =>
                     query.BookId == bookId &&
                     query.UserId == userId &&
                     query.PageNumber == 2 &&
@@ -69,7 +69,7 @@ namespace BookCatalog.UnitTests.Features.Loans.GetLoanHistory
                 BorrowedAt = new DateTimeOffset(2026, 10, 10, 12, 0, 0, TimeSpan.Zero),
                 ReturnedAt = new DateTimeOffset(2026, 10, 12, 12, 0, 0, TimeSpan.Zero)
             };
-            SetupRepository(new PagedResult<Loan>(
+            SetupRepository(new Page<Loan>(
                 [loan],
                 TotalCount: 11,
                 PageNumber: 2,
@@ -92,10 +92,10 @@ namespace BookCatalog.UnitTests.Features.Loans.GetLoanHistory
             item.ReturnedAt.ShouldBe(loan.ReturnedAt);
         }
 
-        private void SetupRepository(PagedResult<Loan> page)
+        private void SetupRepository(Page<Loan> page)
         {
             _loanRepository
-                .GetPagedAsync(Arg.Any<LoanQuery>())
+                .GetPagedAsync(Arg.Any<LoanHistoryQuery>())
                 .Returns(page);
         }
     }

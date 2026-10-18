@@ -3,7 +3,7 @@ using Shouldly;
 
 namespace BookCatalog.UnitTests.Domain.Common
 {
-    public sealed class PagedResultTests
+    public sealed class PageTests
     {
         #region TotalPages
 
@@ -66,7 +66,7 @@ namespace BookCatalog.UnitTests.Domain.Common
         [Fact]
         public void Map_WhenItemsExist_ShouldApplyMapperToEveryItemInOrder()
         {
-            var page = new PagedResult<int>([3, 1, 2], TotalCount: 3, PageNumber: 1, PageSize: 10);
+            var page = new Page<int>([3, 1, 2], TotalCount: 3, PageNumber: 1, PageSize: 10);
 
             var mapped = page.Map(x => $"#{x}");
 
@@ -76,7 +76,7 @@ namespace BookCatalog.UnitTests.Domain.Common
         [Fact]
         public void Map_ShouldPreservePaginationMetadata()
         {
-            var page = new PagedResult<int>([1, 2], TotalCount: 25, PageNumber: 2, PageSize: 10);
+            var page = new Page<int>([1, 2], TotalCount: 25, PageNumber: 2, PageSize: 10);
 
             var mapped = page.Map(x => x.ToString());
 
@@ -100,7 +100,7 @@ namespace BookCatalog.UnitTests.Domain.Common
 
         #region Helpers
 
-        private static PagedResult<int> CreatePage(int totalCount, int pageNumber, int pageSize)
+        private static Page<int> CreatePage(int totalCount, int pageNumber, int pageSize)
             => new([], totalCount, pageNumber, pageSize);
 
         #endregion

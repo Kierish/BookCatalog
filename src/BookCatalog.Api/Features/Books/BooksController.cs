@@ -1,7 +1,7 @@
 ﻿using BookCatalog.Api.Features.Books.CreateBook;
 using BookCatalog.Api.Features.Books.DeleteBook;
 using BookCatalog.Api.Features.Books.GetBookById;
-using BookCatalog.Api.Features.Books.GetBooksList;
+using BookCatalog.Api.Features.Books.GetBooks;
 using BookCatalog.Api.Features.Books.UpdateBook;
 using BookCatalog.Domain.Common;
 using Microsoft.AspNetCore.Mvc;
@@ -33,11 +33,11 @@ namespace BookCatalog.Api.Features.Books
         }
 
         [HttpGet]
-        [ProducesResponseType(typeof(PagedResult<BookResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Page<BookResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(HttpValidationProblemDetails), StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<PagedResult<BookResponse>>> GetBooks(
-            [FromQuery] GetBooksListRequest request,
-            [FromServices] GetBooksListHandler handler,
+        public async Task<ActionResult<Page<BookResponse>>> GetBooks(
+            [FromQuery] GetBooksRequest request,
+            [FromServices] GetBooksHandler handler,
             CancellationToken cancellationToken)
         {
             var pagedBooks = await handler.HandleAsync(request, cancellationToken);
@@ -89,6 +89,7 @@ namespace BookCatalog.Api.Features.Books
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
         [ProducesResponseType(typeof(HttpValidationProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Delete(
             Guid id,

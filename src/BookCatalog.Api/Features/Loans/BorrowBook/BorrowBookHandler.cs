@@ -40,10 +40,12 @@ namespace BookCatalog.Api.Features.Loans.BorrowBook
                     BookErrors.NotFound(request.BookId));
             }
 
-            if (!await _userRepository.ExistsAsync(request.UserId, cancellationToken))
+            var user = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
+
+            if (user is null)
             {
                 _logger.LogWarning(
-                    "Book borrowing rejected. UserId: {UserId} was not found.",
+                    "Book borrowing rejected. UserId: {UserId} was not found.", 
                     request.UserId);
 
                 return Result<LoanResponse>.Failure(
@@ -62,7 +64,7 @@ namespace BookCatalog.Api.Features.Loans.BorrowBook
 
             var loan = request.ToEntity(_timeProvider.GetUtcNow());
 
-            if (!await _loanRepository.TryBorrowAsync(loan, cancellationToken))
+            if (!await _loanRepository.TryBorrowAsync(loan, user, cancellationToken))
             {
                 _logger.LogWarning(
                     "Book borrowing rejected due to a concurrent request. BookId: {BookId} is already borrowed.",

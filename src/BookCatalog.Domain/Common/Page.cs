@@ -1,6 +1,6 @@
 ﻿namespace BookCatalog.Domain.Common
 {
-    public sealed record PagedResult<T>(
+    public sealed record Page<T>(
         IReadOnlyList<T> Items,
         int TotalCount,
         int PageNumber,
@@ -10,9 +10,9 @@
         public bool HasPreviousPage => PageNumber > 1;
         public bool HasNextPage => PageNumber < TotalPages;
 
-        public PagedResult<TResult> Map<TResult>(Func<T, TResult> mapper)
+        public Page<TResult> Map<TResult>(Func<T, TResult> mapper)
         {
-            return new PagedResult<TResult>(
+            return new Page<TResult>(
                 Items.Select(mapper).ToList(),
                 TotalCount,
                 PageNumber,
