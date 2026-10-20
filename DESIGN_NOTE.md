@@ -1,153 +1,263 @@
-# Design Note — Book Catalog Platform (Weeks 1–3)
+# Design Note — Book Catalog Platform (Weeks 1–4)
 
-A living document tracking architectural decisions, trade-offs, and learnings.
-
----
-
-## 1. What Was Built
-
-- **Week 1:** A CRUD API with separate request/response models, FluentValidation, Swagger, and structured logging. One project contained feature handlers directly dependent on `InMemoryBookStore`.
-- **Week 2:** Separate projects, an `IBookRepository` abstraction, shared mapping methods, filtering and pagination, centralized exception handling, and unit tests.
-- **Week 3:** PostgreSQL persistence with EF Core migrations and relational entities, database-side querying, transactional lending, borrowing history, and Docker Compose orchestration.
-
-Data is now stored in PostgreSQL and persists across application and container restarts.
+A record of the platform's architectural decisions, trade-offs, and learnings across the four weeks.
 
 ---
 
-## 2. Architecture & Solution Structure
+## 1. What the Platform Does
 
-The solution uses **Layered Architecture**, with feature-based organization inside the API project:
+Book Catalog Platform is a REST API built with .NET 10 for managing a book catalog and borrowing operations.
+
+The platform allows clients to create, retrieve, update, delete, search, and paginate books. It also supports borrowing and returning books, viewing loan history, and preventing multiple active loans for the same book.
+
+The application uses PostgreSQL with EF Core for persistent storage, Docker Compose for local deployment, and provides validation, consistent error responses, logging, and health checks. Unit and integration tests cover business logic and the main API flows.
+
+---
+
+## 2. Week 1 — Initial Implementation
+
+### Architecture & Solution Structure
+
+The initial solution used a **Feature-First (Vertical Slice) Architecture** within a single project:
 
 ```text
-src/
-├── BookCatalog.Domain/          # Entities, shared models, results, queries, repository interfaces
-├── BookCatalog.Infrastructure/  # EF Core persistence and PostgreSQL repositories
-│   ├── Persistence/             # DbContext, entity configurations, migrations
-│   └── Repositories/            # Book, author, user, and loan repositories
-└── BookCatalog.Api/             # HTTP endpoints and application setup
-    ├── Features/Books/          # Catalog requests, validators, handlers, mappings
-    ├── Features/Loans/          # Borrowing, returns, and history
-    ├── Filters/                 # ValidationFilter
-    └── Exceptions/              # GlobalExceptionHandler
-tests/
-└── BookCatalog.UnitTests/       # Tests independent of external services
-Dockerfile                       # API and migration images
-docker-compose.yml               # PostgreSQL, migrations, and API orchestration
+src/BookCatalog/
+├── Domain/
+│   └── Book.cs                    # Entity with Guid V7 identifiers
+├── Features/Books/
+│   ├── CreateBook/                # Request, Validator, Handler
+│   ├── DeleteBook/                # Handler
+│   ├── GetBookById/               # Handler
+│   ├── GetBooksList/              # Handler
+│   ├── UpdateBook/                # Request, Validator, Handler
+│   ├── BookResponse.cs            # Shared response contract
+│   └── BooksController.cs         # REST routing and status code mapping
+└── Infrastructure/
+    ├── Filters/
+    │   └── ValidationFilter.cs    # FluentValidation action filter
+    └── Storage/
+        └── InMemoryBookStore.cs   # In-memory storage
 ```
 
-- **Decision:** Keep `Domain` independent; `Infrastructure` depends on `Domain`, while `Api` references both and registers implementations.
-- **Why:** Storage details belong outside the domain and handlers. I kept handlers in `Api` because a separate `Application` project would mainly move existing features into another assembly at this scale.
-- **Trade-off:** Application logic and HTTP concerns share a project, although controllers, handlers, and validators have separate responsibilities.
-
----
-
-## 3. Week 1
+The API supported CRUD operations with request validation, Swagger documentation, logging, and appropriate HTTP status codes. Data was stored in memory using `InMemoryBookStore` and was lost when the application restarted.
 
 ### Key Decisions and Rationale
 
 | Decision | Why |
 | :--- | :--- |
-| Used Vertical Slice Architecture within a single project. | Keeps code organized by feature. As the project grows, this makes it easier to add new features and change existing ones. |
-| Used `ConcurrentDictionary<Guid, Book>` registered as a `Singleton`. | It supports thread-safe dictionary operations for simultaneous HTTP requests and provides fast data lookups. The `Singleton` lifetime ensures data is preserved in memory for the entire time the application is running. |
-| Generated IDs using `Guid.CreateVersion7()`. | Creates IDs directly in code with a very low risk of collisions. Their time-based structure can help reduce database index fragmentation compared with random IDs when migrating to SQL, depending on how the database sorts GUIDs. |
-| Implemented FluentValidation using a custom `ValidationFilter`. | Separates concerns by keeping request models clean and provides more validation features and flexibility than standard DataAnnotations. The filter ensures validation errors use a consistent, standardized `ProblemDetails` format. |
-| Store methods return `Task<T>` via `Task.FromResult` without using the `async` keyword internally. | Prepares the system for Week 3 by establishing an async contract across handlers without changing the calling style later. Omitting the `async` keyword in the store avoids generating state machines for in-memory operations. |
+| Organized the project using Vertical Slices. | Groups code by feature rather than technical responsibility, making individual operations easier to locate and modify. |
+| Used `ConcurrentDictionary<Guid, Book>` registered as a `Singleton`. | Supports thread-safe dictionary operations for concurrent HTTP requests and fast lookups. The singleton lifetime preserves the data for the application's lifetime. |
+| Generated IDs using `Guid.CreateVersion7()`. | Generates time-ordered identifiers with a very low collision probability. Their sequential characteristics can improve database index locality compared with random UUIDv4 identifiers. |
+| Implemented FluentValidation through a custom `ValidationFilter`. | Keeps validation rules separate from request models and provides flexibility beyond DataAnnotations. The filter returns consistent validation errors using `ProblemDetails`. |
+| Used `Task` / `Task<T>` return types with `Task.CompletedTask` and `Task.FromResult` in the in-memory store. | Established asynchronous contracts for future EF Core integration while avoiding unnecessary async state machines for synchronous in-memory operations. |
 
 ### What I Found Hard
 
-- **Choosing the Architecture:** Finding the right balance between avoiding overengineering for Week 1 while still setting up a solid foundation for the project to grow.
-- **Sticking to YAGNI:** Fighting the urge to add "just-in-case" features (extra audit fields, soft delete, premature layers) and focusing strictly on current requirements.
+- **Choosing the Architecture:** Finding the right balance between avoiding overengineering for Week 1 and establishing a foundation that could evolve as the project grew.
+- **Sticking to YAGNI:** Resisting the temptation to introduce unnecessary features and abstractions, such as additional audit fields, soft deletion, or premature layering.
 
-### What I Would Improve with More Time
+### Improvements Identified at the End of Week 1
 
-1. **Automated Integration Tests:** Use `WebApplicationFactory` to check routing, status codes, and validation through HTTP requests. Still planned.
-2. **Querying Enhancements:** Add pagination with total count and filtering. Completed in Week 2.
+1. **Automated Integration Tests:** Add HTTP-level tests using `WebApplicationFactory` to verify routing, status codes, and validation behavior. *Implemented in Week 4.*
+2. **Querying Enhancements:** Introduce pagination with total count and filtering for `GET /api/books`. *Implemented in Week 2.*
 
 ---
 
-## 4. Week 2
+## 3. Week 2 — Architecture & Testing
 
-### Key Decisions and Rationale
+### Layer Separation and Rationale
 
-| Decision | Why |
-| :--- | :--- |
-| Separated the solution into `Domain`, `Infrastructure`, and `Api`, keeping feature handlers in `Api`. | Separates responsibilities: `Domain` contains models and interfaces without depending on other projects, `Infrastructure` handles storage, and `Api` contains endpoints, business logic, configuration, and validation. A separate `Application` project would mainly move the existing handlers away from the controllers, so it was not needed at this stage. |
-| Introduced `IBookRepository` and replaced direct dependencies on `InMemoryBookStore`. | Hides storage details from handlers and gives them methods for reading and changing books. Prepares the system for a database implementation by allowing the repository and its DI registration to change without rewriting handlers, as long as the contract stays the same. |
-| Extracted mapping logic into `BookMappings` extension methods. | Removes repeated mapping code from handlers and keeps conversions in one place. Preserves the separation between API contracts and the internal model, and makes mapping easier to test. |
-| Implemented centralized exception handling using `GlobalExceptionHandler`. | Ensures unexpected errors return a consistent `500` ProblemDetails response with a generic message and `traceId`. Logs the original exception for debugging while preventing internal messages and stack traces from reaching the client. |
-| Added filtering by title, author, and publication year, with pagination through `Page<T>`. | Allows clients to narrow down the catalog and move through pages. Applying filters before pagination ensures the total count includes all matching books, while the response contains only the requested page and its metadata. |
+I restructured the single-project solution into three projects:
+
+- **Domain:** Contains entities, shared models, and repository interfaces. It has no dependencies on other solution projects.
+- **Infrastructure:** Contains the in-memory repository implementation and handles data storage.
+- **Api:** Contains controllers, feature handlers, validators, mappings, and application configuration.
+
+I kept feature handlers in `Api` rather than introducing a separate `Application` project. At this scale, another project would add complexity without providing a clear benefit. Controllers and handlers still have separate responsibilities.
+
+This structure separates storage concerns from business logic and allows the persistence implementation to change without requiring changes to the handlers, provided the repository contract remains compatible.
+
+### Data Access Abstraction
+
+I introduced `IBookRepository` to replace direct dependencies on `InMemoryBookStore`.
+
+The interface defines operations for retrieving, creating, updating, and deleting books, including paginated and filtered queries.
+
+It hides the storage implementation from handlers, allowing them to work with an abstraction rather than knowing whether the data is stored in memory or in a database.
+
+The repository implementation is selected through dependency injection. This prepared the project for replacing in-memory storage with EF Core in Week 3.
 
 ### Testing Strategy
 
-- **Decision:** Use xUnit, NSubstitute, and Shouldly to check behavior without a database, running API, or external services.
-- **Handlers:** Check operation results, selected repository arguments, and missing-book scenarios. Repository substitutes keep these tests independent of storage, meaning none of these unit tests will break when swapping to a real database in Week 3.
-- **Mappings and Pagination Models:** Check field conversions separately, plus page calculations and metadata preservation in `Page<T>`. New fields still require updating test expectations.
-- **Validators and Exceptions:** Check valid inputs, invalid values, and selected boundaries. Verify the exception handler's response fields and absence of internal exception details.
-- **Scope:** I prioritized these behaviors over logging assertions and explicit exception-propagation tests rather than pursuing 100% coverage. Repository filtering and page selection are not tested directly; handler tests only verify parameter forwarding and mapping. HTTP pipeline and database integration tests remain future work.
+I used **xUnit, NSubstitute, and Shouldly** to write unit tests without external dependencies.
 
-### What I Found Hard
+- **Handlers:** Tested operation results, repository interactions, and missing-book scenarios.
+- **Mappings and Pagination:** Tested field conversions, page calculations, and metadata.
+- **Validators:** Tested valid inputs, invalid values, and boundary conditions.
+- **Exception Handling:** Verified consistent error responses without exposing internal exception details.
 
-- **Choosing What to Test:** It was hard to decide which scenarios to cover and what to check inside each test. I had to decide where useful checks ended and unnecessary tests for every imaginable failure began.
+I prioritized business behavior and error paths rather than aiming for 100% code coverage.
 
-  > Refactoring Observation: The restructuring was mostly mechanical, but modifying every handler constructor to introduce `IBookRepository` showed that depending on a concrete store class made the code less flexible to change.
+I did not focus on logging assertions, every possible exception-propagation scenario, or testing the HTTP pipeline and database interactions. Those integration scenarios were left for Week 4.
 
-### What I Would Improve with More Time
+Repository filtering and pagination implementations were not tested directly; handler tests verified that the correct parameters were forwarded.
 
-1. **ISBN Validation:** Validate format and check digits instead of only limiting the length of non-blank values.
-2. **Continuous Integration:** Automatically build and run unit tests for pull requests.
-3. **Integration Tests:** In a later stage, verify HTTP routing, validation, exception handling, and interaction with a real database.
+### Refactoring Challenges and Lessons
+
+The main refactoring challenge was replacing the direct dependency on `InMemoryBookStore` across the existing handlers.
+
+Although the restructuring was mostly mechanical, every handler constructor had to be updated to depend on `IBookRepository`.
+
+This revealed a weakness in the original design: handlers were coupled to a concrete storage implementation, making it harder to replace the persistence mechanism.
+
+Introducing the repository interface removed that dependency and made the storage implementation replaceable without directly affecting the business logic.
 
 ---
 
-## 5. Week 3
+## 4. Week 3 — Persistence & Docker
 
 ### Data Model
 
-- **Author → Books:** One author has many books, while each book has one required author. Keeping authors separate avoids repeating names in every book row and gives the relationship a database-enforced foreign key.
-- **Book → Loans:** One book has many loans over time. `ReturnedAt = null` identifies the active loan, while completed rows remain available as borrowing history.
-- **User → Loans:** One user can borrow many books over time. `Loan` connects a user and a book while storing relationship-specific data such as `BorrowedAt` and `ReturnedAt`.
-- **Loan identity:** `Loan` has its own primary key because the same user can borrow the same book multiple times. Using only `BookId` and `UserId` as a composite key would prevent repeated loans and would not identify one borrowing event independently.
-- **Active loan count:** `User.ActiveLoanCount` is a denormalized counter updated in the same transaction as the loan. It provides a multi-step transactional operation and avoids recounting the user's borrowing history when the current count is needed.
+- **Author → Books:** One author can have many books. Authors are stored separately to avoid duplicating information.
+- **Book → Loans:** One book can have multiple loans over time. `ReturnedAt = null` indicates an active loan, while previous loans remain in the history.
+- **User → Loans:** One user can borrow multiple books. Each `Loan` stores `BorrowedAt` and `ReturnedAt`.
+- **Loan Identity:** Each loan has its own primary key because the same user can borrow the same book multiple times.
+- **Active Loan Count:** `User.ActiveLoanCount` stores the number of active loans and is updated in the same transaction as borrowing or returning a book.
 
-Database constraints protect invariants independently of application validation: publication years cannot be less than one, active-loan counts cannot be negative, return time cannot precede borrow time, foreign keys prevent orphaned relations, and a partial unique index allows only one active loan per book.
-
-### Dockerfile Structure
-
-| Line | Purpose |
-| :--- | :--- |
-| `FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build` | Starts a build stage with the full .NET SDK. |
-| `WORKDIR /src` | Sets the working directory for restore and publish commands. |
-| `COPY` project files, then `dotnet restore` | Restores dependencies in a cacheable layer that changes only when project files change. |
-| `COPY . .` | Copies the remaining source code into the build stage. |
-| `dotnet publish ... --no-restore` | Compiles the API in Release mode and places deployable files in `/app/publish`. |
-| `FROM build AS migration` | Starts a migration stage from the SDK build stage; Compose builds it as a separate image. |
-| `dotnet tool install ... dotnet-ef` | Installs the EF Core CLI version used by the project. |
-| Migration `ENTRYPOINT` | Applies committed migrations and exits; Compose starts the API only after a successful exit. |
-| `FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final` | Starts a clean runtime-only stage without the SDK or source code. |
-| `ENV ASPNETCORE_HTTP_PORTS=8080` and `EXPOSE 8080` | Configures Kestrel's container port and documents it for Docker. |
-| `COPY --from=build /app/publish .` | Copies only the published application into the final image. |
-| `USER $APP_UID` | Runs the API as the non-root user provided by the .NET image. |
-| API `ENTRYPOINT` | Starts `BookCatalog.Api.dll` when the API container runs. |
+Database constraints enforce data integrity, including foreign keys, valid publication years, non-negative loan counts, and valid return dates. A partial unique index prevents multiple active loans for the same book.
 
 ### Database Choice: PostgreSQL
 
-I chose PostgreSQL as the relational storage backend for 4 specific reasons:
+I chose PostgreSQL for four reasons:
 
-1. **Lightweight for Docker:** The `postgres:17-alpine` image is relatively small, reducing download time and local setup overhead.
-2. **UUIDv7-Friendly Ordering:** PostgreSQL stores UUIDs in sortable binary form, allowing our `Guid.CreateVersion7()` keys to provide more sequential B-Tree insertions and reduce index fragmentation compared with random UUIDv4 values.
-3. **Partial Unique Indexes:** It supports conditional indexes (e.g., `UNIQUE(BookId) WHERE ReturnedAt IS NULL`), elegantly solving the double-borrowing race condition at the database level.
-4. **No Licensing Limits:** It is 100% free and open-source, with no artificial caps on database size or hardware usage.
+1. **Docker:** The `postgres:17-alpine` image is relatively small and easy to run locally.
+2. **UUIDv7:** Time-ordered UUIDs can improve index locality compared with random UUIDv4 values.
+3. **Partial Unique Indexes:** A unique index on `BookId` where `ReturnedAt IS NULL` prevents two active loans for the same book.
+4. **Open Source:** PostgreSQL is free and has no licensing restrictions.
 
 ### Impact of Replacing In-Memory Storage
 
-- **Amount of change:** Significant. The change affected entities, repository contracts and implementations, DTOs, mappings, validators, handlers, dependency registration, controllers, and unit tests.
-- **Why so much changed:** Replacing the storage alone was relatively isolated. Most changes came from replacing the flat `Book` model with relationships between authors, books, users, and loans.
-- **Why Result was introduced:** The expanded domain added expected failures such as missing authors or users, unavailable books, and already returned loans. The Result pattern lets handlers return typed `NotFound` and `Conflict` errors without using exceptions for normal business outcomes. Unexpected database failures still reach `GlobalExceptionHandler` and return `500`.
-- **What Week 2 got right:** Handlers already depended on repository interfaces, and unit tests used substitutes. EF Core remained inside `Infrastructure`, and the tests still did not require a real database.
-- **What Week 2 revealed:** The abstraction separated storage from business logic, but its contracts were designed around a simple in-memory `Book` model. It handled the persistence replacement well, but it could not prevent a real domain expansion from affecting multiple layers.
+The transition affected entities, repositories, DTOs, mappings, validators, handlers, controllers, and unit tests.
+
+However, most changes came from expanding the domain with authors, users, and loans, rather than replacing the storage itself.
+
+The `IBookRepository` abstraction helped keep EF Core inside `Infrastructure`, while handlers continued depending on repository interfaces.
+
+I also introduced the **Result pattern** to handle expected failures, such as missing entities or unavailable books, without using exceptions.
+
+**Lesson learned:** The repository abstraction made replacing storage easier, but expanding the domain still required changes across multiple layers.
 
 ### Expected Performance Bottleneck
 
-- **First bottleneck:** `GET /api/books`.
-- **Why:** It performs a count and a page query, searches titles and author names with `ILIKE '%value%'`, and uses offset pagination. Leading-wildcard searches may scan many rows, while deep offsets require PostgreSQL to pass over earlier results.
-- **Possible improvements:** PostgreSQL trigram indexes, keyset pagination and response projection with `Select`.
+The first expected bottleneck is `GET /api/books`.
+
+It executes count and page queries, uses `ILIKE '%value%'` for searching, and relies on offset pagination.
+
+Searching with a leading wildcard can scan many rows, while large offsets become slower as the database skips earlier results.
+
+**Possible improvements:** PostgreSQL trigram indexes, keyset pagination, and DTO projection with `Select`.
+
+### Dockerfile Structure
+
+| Instruction | Purpose |
+| :--- | :--- |
+| `FROM .../sdk:10.0 AS build` | Uses the .NET SDK to build the application. |
+| `WORKDIR /src` | Sets the working directory. |
+| `COPY` project files + `dotnet restore` | Restores dependencies using Docker layer caching. |
+| `COPY . .` | Copies the remaining source code. |
+| `dotnet publish --no-restore` | Builds and publishes the API in Release mode. |
+| `FROM build AS migration` | Creates a separate stage for EF Core migrations. |
+| `dotnet tool install ... dotnet-ef` | Installs the EF Core CLI. |
+| Migration `ENTRYPOINT` | Applies migrations before the API starts. |
+| `FROM .../aspnet:10.0 AS final` | Uses a smaller runtime-only image. |
+| `ENV ASPNETCORE_HTTP_PORTS=8080` + `EXPOSE 8080` | Configures the API port. |
+| `COPY --from=build /app/publish .` | Copies the published files into the runtime image. |
+| `USER $APP_UID` | Runs the API without root privileges. |
+| API `ENTRYPOINT` | Starts `BookCatalog.Api.dll`. |
+
+---
+ 
+## 5. Week 4 — Final Reflection
+
+### Week 4 Overview
+
+In the final week, I focused on making the API more reliable, testable, and easier to maintain. I added integration tests against a real PostgreSQL database, health checks, structured JSON logging with Serilog, startup configuration validation, bounded database retries, and graceful shutdown.
+
+I also refactored existing code, optimized database operations, introduced `TimeProvider` for date-dependent logic, and updated the README.
+
+### Final Architecture & Solution Structure
+
+```text
+src/
+├── BookCatalog.Domain/
+│   ├── Entities/                    # Author, Book, User, and Loan entities
+│   ├── Common/                      # Pagination, queries, and Result models
+│   └── Interfaces/                  # Repository contracts
+├── BookCatalog.Infrastructure/
+│   ├── Persistence/
+│   │   ├── Configurations/          # EF Core entity mappings and constraints
+│   │   ├── Migrations/              # PostgreSQL schema migrations
+│   │   └── BookCatalogDbContext.cs  # EF Core database context
+│   └── Repositories/                # PostgreSQL repository implementations
+└── BookCatalog.Api/
+    ├── Configuration/               # Database options and startup validation
+    ├── Controllers/                 # Shared API controller behavior
+    ├── Exceptions/                  # Global exception handling
+    ├── Features/
+    │   ├── Books/
+    │   │   ├── CreateBook/          # Request, Validator, Handler
+    │   │   ├── DeleteBook/          # Handler
+    │   │   ├── GetBookById/         # Handler
+    │   │   ├── GetBooks/            # Request, Validator, Handler
+    │   │   ├── UpdateBook/          # Request, Validator, Handler
+    │   │   ├── Shared/              # Response, mappings, ISBN validation
+    │   │   └── BooksController.cs   # Book REST endpoints
+    │   └── Loans/
+    │       ├── BorrowBook/           # Request, Validator, Handler
+    │       ├── GetLoanHistory/       # Request, Validator, Handler, Response
+    │       ├── ReturnBook/           # Handler
+    │       ├── Shared/               # Loan responses and mappings
+    │       └── LoansController.cs    # Lending REST endpoints
+    ├── Filters/                      # FluentValidation action filter
+    └── Program.cs                    # Dependency registration and HTTP pipeline
+tests/
+├── BookCatalog.UnitTests/            # Isolated business-logic tests
+└── BookCatalog.IntegrationTests/
+    ├── Features/                     # HTTP tests for core API flows
+    └── Infrastructure/               # TestServer, Testcontainers, and Respawn setup
+Dockerfile                             # Build, migration, and runtime stages
+docker-compose.yml                     # PostgreSQL, migrations, and API orchestration
+```
+
+### Key Decisions and Rationale
+
+These are the five most important technical decisions made throughout the month.
+
+| Decision | Rationale and Trade-off |
+| :--- | :--- |
+| **Feature-Based Layered Architecture** | Combined feature-based organization with separate `Domain`, `Infrastructure`, and `Api` projects. This keeps related functionality together while separating responsibilities. Handlers remain in `Api` to avoid adding an unnecessary `Application` project, at the cost of keeping application logic and HTTP concerns in the same assembly. |
+| **Database Choice: PostgreSQL** | Chose PostgreSQL because it is free, works well with Docker, supports UUIDv7 identifiers, and provides partial unique indexes. The trade-off is relying on some PostgreSQL-specific features. |
+| **Partial Unique Index for Lending** | Used a partial unique index on `BookId` where `ReturnedAt IS NULL`. This prevents multiple active loans for the same book at the database level while preserving borrowing history. |
+| **Real Database Integration Testing** | Used `WebApplicationFactory` with `TestServer` to test the API without running it in Docker or using real Kestrel network connections. PostgreSQL runs in a shared Testcontainers container, and Respawn resets the database before each test. Tests run sequentially to avoid conflicts. This reduces setup overhead but does not verify real network behavior. |
+| **Result Pattern vs Exceptions** | Used the Result pattern for expected failures such as `NotFound` and `Conflict`, while reserving exceptions for unexpected failures. This makes business outcomes explicit but requires additional result types and handling logic. |
+
+### What I Would Do Differently
+
+- **Repository Abstraction:** I would introduce `IBookRepository` in Week 1 instead of making handlers depend directly on `InMemoryBookStore`. This would have avoided changing handler dependencies during Week 2 and made replacing the storage implementation easier.
+- **Soft Deletion:** When loan history was introduced in Week 3, I would choose soft deletion instead of physical deletion. This would allow books to be removed from the catalog while preserving their borrowing history.
+- **TimeProvider:** I would introduce `TimeProvider` when implementing the first date-dependent validation rule. This would make the dependency on the current year explicit and allow tests to use a controlled clock instead of relying on the system time.
+
+### Known Limitations and Performance Bottlenecks
+
+- **Concurrency:** Simultaneous borrowing or returning operations may cause incorrect `ActiveLoanCount` values. Transactions ensure atomicity but do not prevent every race condition.
+- **Book Deletion Limitations:** Books can only be permanently deleted if they have no borrowing history. Otherwise, the API returns `409 Conflict`.
+- **Performance:** `GET /api/books` is the likely first bottleneck due to wildcard searches, count queries, and offset pagination.
+- **Idempotency:** `POST` operations do not support idempotency keys, so retrying after an uncertain outcome may lead to duplicate actions or conflicts.
+- **Database Portability:** The implementation uses PostgreSQL-specific features such as partial indexes and `ILIKE`.
+- **Testing Coverage:** Integration tests cover main flows but do not fully test concurrency, retries, graceful shutdown, or every catalog operation.
+
+### Lessons Learned
+
+- **Architecture and Trade-offs:** I gained experience combining Vertical Slice and Layered Architecture. I learned that architecture is not about following a specific pattern completely, but about choosing the right abstractions and trade-offs for the project's size and requirements.
+- **Concurrency Control:** I learned about optimistic and pessimistic concurrency control and different ways to handle concurrent database operations. In practice, I used a PostgreSQL partial unique index to prevent multiple active loans for the same book.
+- **PostgreSQL and Indexes:** I gained a deeper understanding of how B-tree indexes work, how UUID ordering affects index performance, and how PostgreSQL features such as partial indexes and constraints help maintain data integrity.

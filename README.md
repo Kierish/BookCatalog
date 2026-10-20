@@ -10,7 +10,10 @@ The solution uses **Layered Architecture**, with feature-based organization insi
 - **`BookCatalog.Infrastructure`**: EF Core persistence, PostgreSQL repositories, entity configurations, and migrations.
 - **`BookCatalog.Api`**: REST endpoints, feature handlers, request models, validation, error handling, and dependency registration.
 
-The separate **`BookCatalog.UnitTests`** project uses xUnit, NSubstitute, and Shouldly to test business logic without accessing a real database.
+Testing is split into two projects:
+
+- **`BookCatalog.UnitTests`** uses xUnit, NSubstitute, and Shouldly to test business logic in isolation.
+- **`BookCatalog.IntegrationTests`** runs the API through `WebApplicationFactory` against a real PostgreSQL instance created by Testcontainers. Respawn resets the database between tests.
 
 Data is stored in PostgreSQL and persists across application and container restarts.
 
@@ -22,7 +25,7 @@ Data is stored in PostgreSQL and persists across application and container resta
 | `GET` | `/api/books` | Retrieve paginated and filtered books | `200`, `400` |
 | `GET` | `/api/books/{id}` | Retrieve a book by ID | `200`, `400`, `404` |
 | `PUT` | `/api/books/{id}` | Update a book | `204`, `400`, `404` |
-| `DELETE` | `/api/books/{id}` | Delete a book | `204`, `400`, `404` |
+| `DELETE` | `/api/books/{id}` | Delete a book without loan history | `204`, `400`, `404`, `409` |
 | `POST` | `/api/loans` | Borrow an available book | `201`, `400`, `404`, `409` |
 | `POST` | `/api/loans/{loanId}/return` | Return a borrowed book | `204`, `400`, `404`, `409` |
 | `GET` | `/api/loans` | Retrieve paginated borrowing history | `200`, `400` |
@@ -43,6 +46,15 @@ Data is stored in PostgreSQL and persists across application and container resta
 - `pageSize`: Items per page (default: `10`, maximum: `50`).
 
 Paginated responses include `items`, `totalCount`, `pageNumber`, `pageSize`, `totalPages`, `hasPreviousPage`, and `hasNextPage`.
+
+## Operations
+
+| Endpoint | Purpose |
+| :--- | :--- |
+| `/health/live` | Confirms that the API process is running |
+| `/health/ready` | Confirms that the API can connect to PostgreSQL |
+
+The API validates its database configuration at startup, writes structured JSON logs to the console, retries transient database failures, and supports graceful shutdown.
 
 ## Getting Started
 
@@ -70,7 +82,7 @@ docker compose down
 
 ### Run Tests
 
-Requires the [.NET 10 SDK](https://dotnet.microsoft.com/download).
+Requires the [.NET 10 SDK](https://dotnet.microsoft.com/download) and a running Docker engine. Integration tests start their own isolated PostgreSQL container automatically.
 
 ```bash
 dotnet test BookCatalog.slnx
